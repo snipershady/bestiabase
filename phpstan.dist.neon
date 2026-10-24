@@ -1,8 +1,43 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - phar://vendor/phpstan/phpstan/phpstan.phar/conf/bleedingEdge.neon
+
 parameters:
-    level: 6
+    level: max
+    # Target minimo da composer.json (>=8.4); in locale gira su 8.5.
+    phpVersion:
+        min: 80400
+        max: 80599
     paths:
         - bin/
         - config/
         - public/
         - src/
         - tests/
+        - tools/
+    excludePaths:
+        - config/bundles.php
+        - config/reference.php
+    tmpDir: var/cache/phpstan
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: true
+    reportAnyTypeWideningInVarTag: true
+    polluteScopeWithLoopInitialAssignments: false
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkUninitializedProperties: true
+    checkImplicitMixed: true
+    checkExplicitMixed: true
+    checkBenevolentUnionTypes: true
+    checkMissingCallableSignature: true
+    checkMissingOverrideMethodAttribute: true

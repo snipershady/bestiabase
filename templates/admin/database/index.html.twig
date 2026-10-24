@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}BLAST databases{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Administration</h1>
+    {% include 'admin/_nav.html.twig' %}
+
+    <p class="text-body-secondary">New databases are imported from the command line:
+        <code>bin/console app:blast:import-db &lt;fasta&gt; &lt;code&gt; &lt;nucl|prot&gt; &lt;title&gt; [--restricted]</code>.</p>
+
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Code</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="text-end">Sequences</th>
+                    <th scope="col">Programs</th>
+                    <th scope="col">Visibility</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for database in databases %}
+                    <tr>
+                        <td>{{ database.title }}</td>
+                        <td><code>{{ database.code }}</code></td>
+                        <td>{{ database.molType.value }}</td>
+                        <td class="text-end">{{ database.sequenceCount ?? '–' }}</td>
+                        <td>{{ database.programs|map(p => p.value)|join(', ') }}</td>
+                        <td>
+                            {% if database.public %}
+                                <span class="badge text-bg-success">public</span>
+                            {% else %}
+                                <span class="badge text-bg-warning">restricted</span>
+                                <span class="small text-body-secondary">{{ database.authorizedUsers|length }} user(s)</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge text-bg-{{ database.active ? 'primary' : 'secondary' }}">{{ database.active ? 'active' : 'inactive' }}</span></td>
+                        <td><a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_database_edit', {id: database.id}) }}">Edit</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="8">No database registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

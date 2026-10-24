@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% import 'job/_macros.html.twig' as results %}
+
+{% block title %}Alignment · {{ hit.subjectName }}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_job_show', {id: job.id}) }}">{{ job.program }} job</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_job_query', {id: job.id, position: hit.query.position}) }}">{{ hit.query.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ hit.subjectName }}</li>
+        </ol>
+    </nav>
+
+    <p class="font-monospace small">Query= {{ hit.query.definition ?? hit.query.name }}<br>Length={{ hit.query.length }}</p>
+
+    {{ results.hit(hit, alignments, mol_type) }}
+{% endblock %}

@@ -1,0 +1,28 @@
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th scope="col">Submitted</th>
+                <th scope="col">Program</th>
+                <th scope="col">Databases</th>
+                {% if show_user %}<th scope="col">User</th>{% endif %}
+                <th scope="col">Status</th>
+                <th scope="col" class="text-end">Queries / hits</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td><a href="{{ path('app_job_show', {id: job.id.toRfc4122}) }}">{{ job.createdAt|date('Y-m-d H:i') }}</a></td>
+                    <td>{{ job.program.value }}</td>
+                    <td class="small">{{ job.databases|map(d => d.code)|join(', ')|default(job.hasUploadedSubject ? 'uploaded FASTA' : '–') }}</td>
+                    {% if show_user %}<td>{{ job.user ? job.user.email : 'anonymous' }}</td>{% endif %}
+                    <td><span class="badge text-bg-{{ {pending: 'secondary', running: 'info', finished: 'success', failed: 'danger', cancelled: 'warning'}[job.status.value] }}">{{ job.status.value }}</span></td>
+                    <td class="text-end">{{ job.numQueries ?? '–' }} / {{ job.numHits }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="{{ show_user ? 6 : 5 }}">No searches yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

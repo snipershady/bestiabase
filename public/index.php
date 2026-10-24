@@ -1,9 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Kernel;
+use TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService;
 
-require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
+require_once __DIR__ . '/../vendor/autoload_runtime.php';
 
-return static function (array $context) {
-    return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
+return static function (array $context): Kernel {
+    $input = new EffectivePrimitiveTypeIdentifierService();
+
+    return new Kernel(
+        $input->getStringValueFromArray('APP_ENV', $context),
+        $input->getBoolValueFromArray('APP_DEBUG', $context),
+    );
 };

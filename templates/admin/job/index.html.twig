@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Jobs{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Administration</h1>
+    {% include 'admin/_nav.html.twig' %}
+
+    {% include 'job/_list.html.twig' with {jobs: jobs, show_user: true} %}
+
+    <nav class="d-flex gap-2" aria-label="Pages">
+        {% if page > 1 %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_jobs', {page: page - 1}) }}">Newer</a>{% endif %}
+        {% if has_next %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_jobs', {page: page + 1}) }}">Older</a>{% endif %}
+    </nav>
+{% endblock %}

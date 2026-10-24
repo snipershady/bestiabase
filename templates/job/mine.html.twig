@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My searches{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">My searches</h1>
+
+    {% include 'job/_list.html.twig' with {jobs: jobs, show_user: false} %}
+
+    <nav class="d-flex gap-2" aria-label="Pages">
+        {% if page > 1 %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_my_jobs', {page: page - 1}) }}">Newer</a>{% endif %}
+        {% if has_next %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_my_jobs', {page: page + 1}) }}">Older</a>{% endif %}
+    </nav>
+{% endblock %}

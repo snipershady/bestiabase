@@ -1,24 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ app.request.locale|default('en') }}">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {# Turbo applica questo nonce allo stile della sua barra di avanzamento. #}
+        <meta name="csp-nonce" content="{{ csp_nonce() }}">
+        <title>{% block title %}BestiaBase{% endblock %} · BestiaBase</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🧬</text></svg>">
         {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('vendor/bootstrap/dist/css/bootstrap.min.css') }}">
+            <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
         {% endblock %}
-
         {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
+            {% block importmap %}{{ importmap('app', {nonce: csp_nonce()}) }}{% endblock %}
         {% endblock %}
-
-        {% set frankenphp_hot_reload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphp_hot_reload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphp_hot_reload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
     </head>
-    <body>
-        {% block body %}{% endblock %}
+    <body class="d-flex flex-column min-vh-100">
+        <header class="bb-header navbar navbar-dark navbar-expand-md">
+            <nav class="container" aria-label="Main navigation">
+                <a class="navbar-brand" href="{{ path('app_search') }}">BestiaBase</a>
+                <ul class="navbar-nav ms-auto flex-row gap-3">
+                    <li class="nav-item"><a class="nav-link" href="{{ path('app_help') }}">Help</a></li>
+                    {% if app.user %}
+                        <li class="nav-item"><a class="nav-link" href="{{ path('app_my_jobs') }}">My searches</a></li>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_databases') }}">Administration</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Sign out ({{ app.user.username }})</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ path('app_login') }}">Sign in</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </header>
+
+        <main class="container flex-grow-1 py-4">
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" role="status">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% block body %}{% endblock %}
+        </main>
+
+        <footer class="border-top py-3 text-body-secondary small">
+            <div class="container">
+                BestiaBase — sequence similarity search powered by NCBI BLAST+
+            </div>
+        </footer>
     </body>
 </html>

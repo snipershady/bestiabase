@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Help{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Help</h1>
+
+    <nav aria-label="Help sections" class="mb-4">
+        <a href="#search">Running a search</a> ·
+        <a href="#fasta">Query format</a> ·
+        <a href="#programs">Programs</a> ·
+        <a href="#databases">Databases</a> ·
+        <a href="#results">Results</a> ·
+        <a href="#downloads">Downloads</a> ·
+        <a href="{{ path('app_help_parameters') }}">Advanced parameters</a>
+    </nav>
+
+    <section id="search" class="mb-4">
+        <h2 class="h5">Running a search</h2>
+        <ol>
+            <li>Paste one or more query sequences in the text area.</li>
+            <li>Choose the BLAST program: the list of databases changes with it, because each program searches either nucleotide or protein databases.</li>
+            <li>Select one or more databases (hold Ctrl, or Cmd on macOS, to select more than one).</li>
+            <li>Press <em>Basic search</em> to use the BLAST+ defaults, or open <em>Advanced parameters</em>, adjust them and press <em>Advanced search</em>.</li>
+        </ol>
+        <p>The search runs in the background: you are taken to a page that updates itself until the results are ready. Keep its address to come back later; signed-in users also find every search under <em>My searches</em>.</p>
+    </section>
+
+    <section id="fasta" class="mb-4">
+        <h2 class="h5">Query format</h2>
+        <p>Use FASTA: each sequence starts with a definition line beginning with <code>&gt;</code>, followed by the residues on one or more lines. The first word of the definition line becomes the query name in the results.</p>
+        <pre class="bg-body-tertiary p-2">&gt;sample_1 envelope region
+ACTGGACCAGTAGCTTACAGGATGCTTCAGA
+&gt;sample_2
+ACTGGACCAGTAGCTTACAGGATGCTACAGA</pre>
+        <p>A single sequence without a definition line is accepted too. Spaces and digits are ignored, upper and lower case are kept (see <a href="{{ path('app_help_parameters') }}#lowercase-masking">lower case masking</a>). Large FASTA files are imported by the administrators from the command line.</p>
+    </section>
+
+    <section id="programs" class="mb-4">
+        <h2 class="h5">Programs</h2>
+        <table class="table table-sm w-auto">
+            <thead><tr><th scope="col">Program</th><th scope="col">Query</th><th scope="col">Database</th><th scope="col">Compares</th></tr></thead>
+            <tbody>
+                <tr><td>blastn</td><td>nucleotide</td><td>nucleotide</td><td>nucleotide against nucleotide</td></tr>
+                <tr><td>blastp</td><td>protein</td><td>protein</td><td>protein against protein</td></tr>
+                <tr><td>blastx</td><td>nucleotide</td><td>protein</td><td>query translated in all six frames against proteins</td></tr>
+                <tr><td>tblastn</td><td>protein</td><td>nucleotide</td><td>protein against the database translated in all six frames</td></tr>
+                <tr><td>tblastx</td><td>nucleotide</td><td>nucleotide</td><td>both sides translated in all six frames (slowest)</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="databases" class="mb-4">
+        <h2 class="h5">Databases</h2>
+        <p>The list shows the databases you can search: public databases are available to everyone, restricted ones only to the users authorized by an administrator. If a database you need is missing, ask an administrator.</p>
+    </section>
+
+    <section id="results" class="mb-4">
+        <h2 class="h5">Results</h2>
+        <p>The table lists, for every query, the database sequences (subjects) that BLAST found, best first:</p>
+        <dl>
+            <dt>Score</dt><dd>Bit score of the best alignment with the subject: higher is better. It links to the full alignment.</dd>
+            <dt>Identities (Query length)</dt><dd>Identical positions over the alignment length, then the length of the query.</dd>
+            <dt>Percentage</dt><dd>Identity of the best alignment, rounded as BLAST does (it shows 100 only for a perfect match).</dd>
+            <dt>Expect</dt><dd>Number of alignments this good expected by chance in a database of this size: lower is better.</dd>
+        </dl>
+        <p>The filters show only the best N subjects of each query, or only those above an identity or score threshold. Subject names with a recognized accession link to the NCBI record.</p>
+    </section>
+
+    <section id="downloads" class="mb-4">
+        <h2 class="h5">Downloads</h2>
+        <ul>
+            <li><strong>Subject sequences</strong>: select rows in the table and choose the entire sequence or only the region aligned to the query, in FASTA.</li>
+            <li><strong>Tabular</strong>: one line per alignment, with the columns of BLAST <code>-outfmt 6</code> (or 7, with comment lines).</li>
+            <li><strong>BLAST XML</strong>: the original BLAST output (<code>-outfmt 5</code>), while the job is kept on the server.</li>
+        </ul>
+        <p>Finished searches are deleted after a retention period set by the administrators.</p>
+    </section>
+{% endblock %}

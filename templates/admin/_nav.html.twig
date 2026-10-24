@@ -1,0 +1,7 @@
+<ul class="nav nav-tabs mb-3">
+    {% for route, label in {app_admin_databases: 'Databases', app_admin_users: 'Users', app_admin_jobs: 'Jobs'} %}
+        <li class="nav-item">
+            <a class="nav-link {{ app.request.attributes.get('_route') starts with route ? 'active' }}" href="{{ path(route) }}">{{ label }}</a>
+        </li>
+    {% endfor %}
+</ul>

@@ -1,4 +1,6 @@
 {
+    "name": "snipershady/bestiabase",
+    "description": "Web interface for NCBI BLAST+ similarity searches with persisted, browsable results (rewrite of ViroBLAST).",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
@@ -25,6 +27,7 @@
         "symfony/framework-bundle": "8.1.*",
         "symfony/http-client": "8.1.*",
         "symfony/intl": "8.1.*",
+        "symfony/lock": "8.1.*",
         "symfony/mailer": "8.1.*",
         "symfony/mime": "8.1.*",
         "symfony/monolog-bundle": "^3.0|^4.0",
@@ -32,6 +35,7 @@
         "symfony/process": "8.1.*",
         "symfony/property-access": "8.1.*",
         "symfony/property-info": "8.1.*",
+        "symfony/rate-limiter": "8.1.*",
         "symfony/runtime": "8.1.*",
         "symfony/security-bundle": "8.1.*",
         "symfony/serializer": "8.1.*",
@@ -39,6 +43,7 @@
         "symfony/string": "8.1.*",
         "symfony/translation": "8.1.*",
         "symfony/twig-bundle": "8.1.*",
+        "symfony/uid": "8.1.*",
         "symfony/ux-turbo": "^3.6",
         "symfony/validator": "8.1.*",
         "symfony/web-link": "8.1.*",
@@ -88,7 +93,42 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "rector": "rector process",
+        "rector:check": "rector process --dry-run --ansi",
+        "cs:fix": "php-cs-fixer fix --ansi",
+        "cs:check": "php-cs-fixer fix --dry-run --diff --ansi",
+        "stan": "phpstan analyse --memory-limit=1G --ansi",
+        "lint": [
+            "@php bin/console lint:container",
+            "@php bin/console lint:twig templates/",
+            "@php bin/console lint:yaml config/ --parse-tags",
+            "@php bin/console doctrine:schema:validate --skip-sync"
+        ],
+        "test": "phpunit",
+        "test:coverage": [
+            "@putenv XDEBUG_MODE=coverage",
+            "phpunit --coverage-clover var/coverage/clover.xml",
+            "@php tools/check-coverage.php var/coverage/clover.xml"
+        ],
+        "qa:validate": [
+            "@composer validate --strict",
+            "@composer audit"
+        ],
+        "qa": [
+            "@qa:validate",
+            "@rector:check",
+            "@cs:check",
+            "@stan",
+            "@lint",
+            "@test:coverage",
+            "@test:browser"
+        ],
+        "fix": [
+            "@rector",
+            "@cs:fix"
+        ],
+        "test:browser": "node --test \"tests/Browser/*.test.mjs\""
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -102,7 +142,10 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.3",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.1",
+        "phpstan/phpstan-strict-rules": "^2.1",
         "phpstan/phpstan-symfony": "^2.1",
         "phpunit/phpunit": "^13.4",
         "rector/rector": "^2.7",

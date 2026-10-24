@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}BLAST search{% endblock %}
+
+{% macro field(form, name) %}
+    <div class="col-md-6 col-lg-4" data-search-form-target="field" data-field="{{ name }}">
+        {{ form_row(form[name]) }}
+    </div>
+{% endmacro %}
+
+{% block body %}
+    <h1 class="h3 mb-3">BLAST search</h1>
+
+    {{ form_start(form, {attr: {
+        'data-controller': 'search-form',
+        'data-search-form-programs-value': programs|json_encode,
+        'data-search-form-gap-costs-value': gap_costs|json_encode,
+        'novalidate': 'novalidate',
+    }}) }}
+        {{ form_errors(form) }}
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                {{ form_row(form.query) }}
+            </div>
+            <div class="col-lg-4">
+                {{ form_row(form.program, {attr: {'data-search-form-target': 'program', 'data-action': 'search-form#programChanged'}}) }}
+                {{ form_row(form.databases, {attr: {'data-search-form-target': 'databases'}}) }}
+            </div>
+        </div>
+
+        <details class="card my-3" {{ form.vars.submitted and form.advanced.vars.clicked ? 'open' }}>
+            <summary class="card-header">Advanced parameters <a class="small ms-2" href="{{ path('app_help_parameters') }}" target="_blank" rel="noopener">What do they mean?</a></summary>
+            <div class="card-body">
+                <div class="row g-3">
+                    {{ _self.field(form, 'expect') }}
+                    {{ _self.field(form, 'maxTargetSequences') }}
+                    <div class="col-md-6 col-lg-4" data-search-form-target="field" data-field="wordSize">
+                        {{ form_row(form.wordSize, {attr: {'data-search-form-target': 'wordSize'}}) }}
+                    </div>
+                    <div class="col-md-6 col-lg-4" data-search-form-target="field" data-field="nucleotideScoring">
+                        {{ form_row(form.nucleotideScoring, {attr: {'data-search-form-target': 'nucleotideScoring', 'data-action': 'search-form#scoringChanged'}}) }}
+                    </div>
+                    <div class="col-md-6 col-lg-4" data-search-form-target="field" data-field="matrix">
+                        {{ form_row(form.matrix, {attr: {'data-search-form-target': 'matrix', 'data-action': 'search-form#scoringChanged'}}) }}
+                    </div>
+                    <div class="col-md-6 col-lg-4" data-search-form-target="field" data-field="gapCosts">
+                        {{ form_row(form.gapCosts, {attr: {'data-search-form-target': 'gapCosts'}}) }}
+                    </div>
+                    {{ _self.field(form, 'queryGeneticCode') }}
+                    {{ _self.field(form, 'databaseGeneticCode') }}
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-6 col-lg-3">{{ form_row(form.lowComplexityFilter, {attr: {'data-search-form-target': 'lowComplexityFilter'}}) }}</div>
+                    <div class="col-md-6 col-lg-3">{{ form_row(form.softMasking, {attr: {'data-search-form-target': 'softMasking'}}) }}</div>
+                    <div class="col-md-6 col-lg-3">{{ form_row(form.lowercaseMasking) }}</div>
+                    <div class="col-md-6 col-lg-3" data-search-form-target="field" data-field="ungapped">{{ form_row(form.ungapped) }}</div>
+                </div>
+            </div>
+        </details>
+
+        <div class="d-flex gap-2">
+            {{ form_widget(form.basic) }}
+            {{ form_widget(form.advanced) }}
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

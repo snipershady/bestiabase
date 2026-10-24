@@ -1,0 +1,31 @@
+{# Soggetto con link NCBI quando l'accessione è riconosciuta (mai da testo arbitrario del FASTA). #}
+{% macro subject(name, accession, mol_type) %}
+    {%- set url = ncbi_url(accession, mol_type) -%}
+    {%- if url -%}
+        <a href="{{ url }}" target="_blank" rel="noopener noreferrer" title="Open {{ accession }} on NCBI">{{ name }}</a>
+    {%- else -%}
+        {{ name }}
+    {%- endif -%}
+{% endmacro %}
+
+{# Un HSP nel formato pairwise di BLAST. #}
+{% macro alignment(alignment) %}
+    <pre class="bb-alignment mb-3"> Score = {{ alignment.score }}
+ Identities = {{ alignment.identities }}{% if alignment.positives %}, Positives = {{ alignment.positives }}{% endif %}, Gaps = {{ alignment.gaps }}
+{% if alignment.strand %} Strand={{ alignment.strand }}
+{% endif %}{% if alignment.frame %} Frame = {{ alignment.frame }}
+{% endif %}
+{{ alignment.lines|join("\n") }}</pre>
+{% endmacro %}
+
+{# Un hit: defline, lunghezza e i suoi HSP. #}
+{% macro hit(hit, alignments, mol_type) %}
+    <article class="mb-4" id="hit-{{ hit.id }}">
+        {# Nome con link NCBI, poi il resto del defline (senza ripetere il nome). #}
+        <h2 class="h6 font-monospace mb-1">&gt;{{ _self.subject(hit.subjectName, hit.subjectAccession, mol_type) }} {{ hit.subjectDefinition|slice(hit.subjectName|length)|trim }}</h2>
+        <p class="font-monospace small mb-2">Length={{ hit.subjectLength }}</p>
+        {% for alignment in alignments %}
+            {{ _self.alignment(alignment) }}
+        {% endfor %}
+    </article>
+{% endmacro %}

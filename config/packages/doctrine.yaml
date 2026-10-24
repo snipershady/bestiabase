@@ -6,6 +6,11 @@ doctrine:
         # either here or in the DATABASE_URL env var (see .env file)
         #server_version: '16'
 
+        charset: utf8mb4
+        default_table_options:
+            charset: utf8mb4
+            collate: utf8mb4_0900_ai_ci
+
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
         validate_xml_mapping: true

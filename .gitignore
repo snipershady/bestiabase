@@ -28,3 +28,9 @@ phpstan.neon
 /.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###
 /nbproject/
+/CLAUDE.md
+
+###> app/blast-databases ###
+# Volumi dei database BLAST (BLAST_DB_DIR): dati, non codice
+/blastdb/
+###< app/blast-databases ###

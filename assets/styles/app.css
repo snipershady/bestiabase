@@ -1,3 +1,20 @@
-body {
-    background-color: skyblue;
+:root {
+    --bb-brand: #1f669b;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.bb-header {
+    background-color: var(--bb-brand);
+}
+
+/* Allineamenti pairwise: colonne fisse come nell'output di BLAST, scorrimento orizzontale. */
+.bb-alignment {
+    font-size: 0.8rem;
+    line-height: 1.25;
+    overflow-x: auto;
+    white-space: pre;
 }

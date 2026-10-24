@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Users{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Administration</h1>
+    {% include 'admin/_nav.html.twig' %}
+
+    <p><a class="btn btn-sm btn-primary" href="{{ path('app_admin_user_new') }}">New user</a></p>
+
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Email</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Restricted databases</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Last sign in</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.admin ? 'administrator' : 'user' }}</td>
+                        <td class="small">
+                            {% if user.admin %}all{% else %}{{ restricted|filter(d => user in d.authorizedUsers)|map(d => d.code)|join(', ')|default('–') }}{% endif %}
+                        </td>
+                        <td><span class="badge text-bg-{{ user.active ? 'primary' : 'secondary' }}">{{ user.active ? 'active' : 'disabled' }}</span></td>
+                        <td>{{ user.lastLoginAt ? user.lastLoginAt|date('Y-m-d H:i') : '–' }}</td>
+                        <td><a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_user_edit', {id: user.id}) }}">Edit</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

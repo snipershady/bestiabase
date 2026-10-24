@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
+use Doctrine\Deprecations\Deprecation;
 use Symfony\Component\Dotenv\Dotenv;
+use TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-if (method_exists(Dotenv::class, 'bootEnv')) {
-    (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
-}
+new Dotenv()->bootEnv(__DIR__ . '/../.env');
 
-if ($_SERVER['APP_DEBUG']) {
-    umask(0000);
+// Le deprecazioni Doctrine sono silenziose di default: nei test devono emergere (failOnDeprecation).
+Deprecation::enableWithTriggerError();
+
+if (new EffectivePrimitiveTypeIdentifierService()->getBoolValueFromArray('APP_DEBUG', $_SERVER)) {
+    umask(0o000);
 }

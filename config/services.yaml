@@ -21,3 +21,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Contratto della libreria snipershady/typeidentifier: si inietta sempre l'interfaccia.
+    TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService: ~
+    TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierServiceInterface:
+        alias: TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService

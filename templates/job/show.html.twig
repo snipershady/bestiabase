@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+{% import 'job/_macros.html.twig' as results %}
+
+{% block title %}BLAST job{% endblock %}
+
+{% block body %}
+    <div data-controller="job-status"
+         data-job-status-url-value="{{ path('app_job_status', {id: job.id}) }}"
+         data-job-status-finished-value="{{ job.finished ? 'true' : 'false' }}">
+        <h1 class="h3 mb-3">{{ job.program }} search</h1>
+
+        <dl class="row">
+            <dt class="col-sm-3">Job</dt>
+            <dd class="col-sm-9"><code>{{ job.id }}</code></dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">
+                <span data-job-status-target="status" class="badge text-bg-{{ {pending: 'secondary', running: 'info', finished: 'success', failed: 'danger', cancelled: 'warning'}[job.status] }}">{{ job.status }}</span>
+                {% if not job.finished %}<span class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Running"></span>{% endif %}
+            </dd>
+            <dt class="col-sm-3">Queries / hits</dt>
+            <dd class="col-sm-9" data-job-status-target="counts">{{ job.numQueries ?? '–' }} / {{ job.numHits }}</dd>
+            <dt class="col-sm-3">Submitted</dt>
+            <dd class="col-sm-9">{{ job.createdAt|date('Y-m-d H:i:s') }}</dd>
+            {% if job.blastVersion %}
+                <dt class="col-sm-3">BLAST+</dt>
+                <dd class="col-sm-9">{{ job.blastVersion }}</dd>
+            {% endif %}
+        </dl>
+
+        {% if job.error %}
+            <div class="alert alert-danger">{{ job.error }}</div>
+        {% endif %}
+
+        {% if not job.finished %}
+            <p class="text-body-secondary">This page updates itself until the search is done. Keep the link to come back to the results.</p>
+        {% endif %}
+    </div>
+
+    {% if job.status == 'finished' %}
+        <section aria-labelledby="results-title">
+            <h2 class="h4" id="results-title">Results</h2>
+
+            <p class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_tabular', {id: job.id}) }}">Download tabular (outfmt 6)</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_tabular', {id: job.id, comments: 1}) }}">Tabular with comments (outfmt 7)</a>
+                {% if has_xml %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_output_xml', {id: job.id}) }}">BLAST XML (outfmt 5)</a>
+                {% endif %}
+            </p>
+
+            <form method="get" class="row g-2 align-items-end mb-3" aria-label="Filter results">
+                <div class="col-auto">
+                    <label class="form-label" for="filter-top">Show per query</label>
+                    <select class="form-select form-select-sm" id="filter-top" name="top">
+                        {% for top, label in {0: 'All hits', 1: 'Top score', 5: 'Top 5 scores', 10: 'Top 10 scores'} %}
+                            <option value="{{ top }}" {{ filter.top == top ? 'selected' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label" for="filter-cutoff">Cutoff</label>
+                    <select class="form-select form-select-sm" id="filter-cutoff" name="cutoff">
+                        {% for cutoff, label in {none: 'None', identity: 'Identity % ≥', score: 'Bit score ≥'} %}
+                            <option value="{{ cutoff }}" {{ filter.cutoff.value == cutoff ? 'selected' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label" for="filter-value">Value</label>
+                    <input class="form-control form-control-sm" id="filter-value" name="value" type="number" min="0" step="any" value="{{ filter.value }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label" for="filter-sort">Sort</label>
+                    <select class="form-select form-select-sm" id="filter-sort" name="sort">
+                        {% for sort, label in {rank: 'BLAST order', score: 'Score', identity: 'Identity'} %}
+                            <option value="{{ sort }}" {{ filter.sort.value == sort ? 'selected' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+                </div>
+            </form>
+
+            {% if rows is empty %}
+                <div class="alert alert-info">No comparison meets the cutoff criterion. Change the filters, or search again with a higher expect value.</div>
+            {% else %}
+                <form method="post" action="{{ path('app_job_download', {id: job.id}) }}" data-turbo="false" data-controller="select-all" aria-label="Download subject sequences">
+                    <input type="hidden" name="_token" value="{{ csrf_token('download') }}">
+
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                        <span>Download subject sequences of the selected hits:</span>
+                        <div class="form-check form-check-inline mb-0">
+                            <input class="form-check-input" type="radio" name="type" id="download-entire" value="entire" checked>
+                            <label class="form-check-label" for="download-entire">Entire sequence</label>
+                        </div>
+                        <div class="form-check form-check-inline mb-0">
+                            <input class="form-check-input" type="radio" name="type" id="download-mapping" value="mapping">
+                            <label class="form-check-label" for="download-mapping">Region mapped to query</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Download FASTA</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><input class="form-check-input" type="checkbox" aria-label="Select all hits on this page" data-select-all-target="all" data-action="select-all#toggleAll"></th>
+                                    <th scope="col">Query</th>
+                                    <th scope="col">Subject</th>
+                                    <th scope="col" class="text-end">Score</th>
+                                    <th scope="col" class="text-end">Identities (Query length)</th>
+                                    <th scope="col" class="text-end">Percentage</th>
+                                    <th scope="col" class="text-end">Expect</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        <td><input class="form-check-input" type="checkbox" name="hits[]" value="{{ row.hitId }}" aria-label="Select {{ row.subjectName }}" data-select-all-target="item" data-action="select-all#refresh"></td>
+                                        <td><a href="{{ path('app_job_query', {id: job.id, position: row.queryPosition}) }}">{{ row.queryName }}</a></td>
+                                        <td class="font-monospace small">{{ results.subject(row.subjectName, row.subjectAccession, mol_type) }}</td>
+                                        <td class="text-end"><a href="{{ path('app_job_hit', {id: job.id, hitId: row.hitId}) }}" title="Show the alignment">{{ row.bitScore|blast_bits }}</a></td>
+                                        <td class="text-end">{{ row.identities }}</td>
+                                        <td class="text-end">{{ row.percentage }}</td>
+                                        <td class="text-end">{{ row.eValue|blast_evalue }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            {% endif %}
+
+            {% if pages > 1 %}
+                <nav aria-label="Query pages">
+                    <ul class="pagination pagination-sm">
+                        {% for page in 1..pages %}
+                            <li class="page-item {{ page == filter.page ? 'active' }}">
+                                <a class="page-link" href="{{ path('app_job_show', {id: job.id, page: page}|merge(filter.toQuery)) }}">{{ page }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

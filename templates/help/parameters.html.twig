@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Advanced parameters{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Advanced parameters</h1>
+    <p>A basic search uses the BLAST+ defaults and reports up to 50 subjects per query. An advanced search applies the values below; options that do not apply to the chosen program are hidden in the form and ignored.</p>
+
+    <dl class="bb-help">
+        <dt id="expect">Expect threshold</dt>
+        <dd>Maximum E-value of the reported alignments. The default 10 keeps many weak matches; values like 0.001 or 1e-10 keep only significant ones. Raise it when a search finds nothing.</dd>
+
+        <dt id="max-target-sequences">Max target sequences</dt>
+        <dd>Maximum number of database sequences reported for each query.</dd>
+
+        <dt id="word-size">Word size</dt>
+        <dd>Length of the exact initial match that starts an alignment. Smaller words are more sensitive but slower: 7, 11 (default) or 15 for blastn, 2 or 3 (default) for the protein and translated programs.</dd>
+
+        <dt id="match-mismatch">Match/mismatch scores (blastn)</dt>
+        <dd>Reward for an identical base and penalty for a different one. The ratio sets the expected similarity: 1,-3 or 1,-4 suit nearly identical sequences, 2,-3 (default) or 1,-1 more distant ones. Each pair has its own valid gap costs.</dd>
+
+        <dt id="matrix">Matrix (protein and translated programs)</dt>
+        <dd>Substitution scores between amino acids. BLOSUM62 (default) works for most searches; PAM30 or PAM70 favour short or very similar sequences, BLOSUM80 close relatives, BLOSUM45 distant ones.</dd>
+
+        <dt id="gap-costs">Gap costs</dt>
+        <dd>Cost to open a gap (existence) and to extend it by one position (extension). Only the combinations supported by the selected scores or matrix are offered. Not available for tblastx.</dd>
+
+        <dt id="low-complexity">Filter low complexity regions</dt>
+        <dd>Masks repetitive or compositionally biased stretches of the query (DUST for blastn, SEG for the other programs) so they do not produce spurious hits. On by default except for blastp.</dd>
+
+        <dt id="soft-masking">Mask for lookup table only</dt>
+        <dd>Masked regions are skipped when looking for initial matches but can still be part of an alignment. On by default for blastn.</dd>
+
+        <dt id="lowercase-masking">Mask lower case letters</dt>
+        <dd>Treats lower case residues of the query as masked, for example repeats you marked yourself.</dd>
+
+        <dt id="ungapped">Perform ungapped alignment</dt>
+        <dd>Reports only alignments without gaps. tblastx is always ungapped.</dd>
+
+        <dt id="genetic-code">Query and database genetic codes</dt>
+        <dd>Translation table used for translated sequences: the query for blastx and tblastx, the database for tblastn and tblastx. Use the standard code unless the sequences come from mitochondria or organisms with a different code.</dd>
+    </dl>
+{% endblock %}

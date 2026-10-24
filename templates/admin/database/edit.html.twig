@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ database.code }}{% endblock %}
+
+{% block body %}
+    <h1 class="h3 mb-3">Administration</h1>
+    {% include 'admin/_nav.html.twig' %}
+
+    <h2 class="h5">{{ database.code }} <small class="text-body-secondary">({{ database.molType.value }}, {{ database.sequenceCount ?? '?' }} sequences)</small></h2>
+
+    {{ form_start(form) }}
+        {{ form_row(form.title) }}
+        {{ form_row(form.description) }}
+        {{ form_row(form.active) }}
+        {{ form_row(form.public) }}
+        {{ form_row(form.programs) }}
+        {{ form_row(form.authorizedUsers, {help: 'Used only when the database is not public. Hold Ctrl (Cmd on macOS) to select more than one user.'}) }}
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-outline-secondary" href="{{ path('app_admin_databases') }}">Cancel</a>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

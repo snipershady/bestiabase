@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% import 'job/_macros.html.twig' as results %}
+
+{% block title %}Alignments · {{ query.name }}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_job_show', {id: job.id}) }}">{{ job.program }} job</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ query.name }}</li>
+        </ol>
+    </nav>
+
+    <nav class="d-flex gap-2 mb-3" aria-label="Queries">
+        {% if query.position > 1 %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_query', {id: job.id, position: query.position - 1}) }}">Previous query</a>{% endif %}
+        {% if query.position < num_queries %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_query', {id: job.id, position: query.position + 1}) }}">Next query</a>{% endif %}
+    </nav>
+
+    <p class="font-monospace small">Query= {{ query.definition ?? query.name }}<br>Length={{ query.length }}</p>
+
+    {% for item in hits %}
+        {{ results.hit(item.hit, item.alignments, mol_type) }}
+    {% else %}
+        <div class="alert alert-info">No hits{{ page > 1 ? ' on this page' }}.</div>
+    {% endfor %}
+
+    <nav class="d-flex gap-2" aria-label="Hit pages">
+        {% if page > 1 %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_query', {id: job.id, position: query.position, page: page - 1}) }}">Previous hits</a>{% endif %}
+        {% if has_next %}<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_query', {id: job.id, position: query.position, page: page + 1}) }}">More hits</a>{% endif %}
+    </nav>
+{% endblock %}
