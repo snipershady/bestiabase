@@ -4,19 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\SearchController;
 use App\Controller\SecurityController;
 use App\Entity\User;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
@@ -24,9 +15,27 @@ use App\Repository\BlastDatabaseRepository;
 use App\Repository\UserRepository;
 use App\Security\BlastDatabaseVoter;
 use App\Security\BlastJobVoter;
+use App\Security\LoginAltchaListener;
 use App\Security\RecordLastLoginListener;
 use App\Security\SecurityHeadersListener;
-use App\Security\UserChecker;
+use App\Service\Altcha\AltchaChallengeFactory;
+use App\Service\Altcha\AltchaDifficulties;
+use App\Service\Altcha\AltchaDifficulty;
+use App\Service\Altcha\AltchaPurpose;
+use App\Service\Altcha\AltchaSecret;
+use App\Service\Altcha\AltchaVerifier;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
@@ -36,7 +45,6 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[CoversClass(SecurityController::class)]
 #[CoversClass(RecordLastLoginListener::class)]
-#[CoversClass(UserChecker::class)]
 #[UsesClass(BlastBinaryLocator::class)]
 #[UsesClass(BlastCommandBuilder::class)]
 #[UsesClass(FastaNormalizer::class)]
@@ -58,6 +66,15 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[UsesClass(BlastJobVoter::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(AltchaChallengeFactory::class)]
+#[UsesClass(AltchaDifficulties::class)]
+#[UsesClass(AltchaDifficulty::class)]
+#[UsesClass(AltchaVerifier::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
+#[UsesClass(LoginAltchaListener::class)]
+#[UsesClass(AltchaSecret::class)]
 final class SecurityControllerTest extends FunctionalTestCase
 {
     private const string PASSWORD = 'correct horse battery';
@@ -74,7 +91,9 @@ final class SecurityControllerTest extends FunctionalTestCase
 
         self::assertResponseRedirects('/');
         $this->client->followRedirect();
-        self::assertSelectorTextContains('nav', 'Sign out (lab)');
+        self::assertSelectorTextContains('nav summary', 'lab');
+        self::assertSelectorTextContains('nav .dropdown-menu a[href="/logout"]', 'Sign out');
+        self::assertSelectorTextContains('nav .dropdown-menu a[href="/account/password"]', 'Change password');
         $this->entityManager->clear();
         self::assertNotNull($this->entityManager->getRepository(User::class)->findOneBy(['email' => 'lab@example.org'])?->getLastLoginAt());
 
@@ -84,6 +103,40 @@ final class SecurityControllerTest extends FunctionalTestCase
         $this->client->request('GET', '/logout');
         $this->client->followRedirect();
         self::assertSelectorTextContains('nav', 'Sign in');
+    }
+
+    public function testTheLoginPageCarriesTheProofOfWork(): void
+    {
+        $crawler = $this->client->request('GET', '/login');
+
+        self::assertCount(1, $crawler->filter('altcha-widget[auto="onload"]'));
+        self::assertCount(1, $crawler->filter('input[name="altcha"]'));
+        self::assertSelectorExists('button[type="submit"][disabled]');
+    }
+
+    public function testSigningInWithoutTheSecurityCheckIsRefused(): void
+    {
+        $this->user();
+
+        $this->client->request('POST', '/login', ['_username' => 'lab@example.org', '_password' => self::PASSWORD, '_csrf_token' => 'csrf-token'], [], ['HTTP_ORIGIN' => 'http://localhost']);
+        $this->client->followRedirect();
+
+        self::assertSelectorTextContains('.alert-danger', 'The security check failed.');
+        self::assertSelectorNotExists('a[href="/logout"]');
+    }
+
+    public function testASolutionCannotBeUsedTwice(): void
+    {
+        $this->user();
+        $payload = $this->altchaPayload(AltchaPurpose::Login);
+
+        $this->client->request('POST', '/login', ['_username' => 'lab@example.org', '_password' => 'wrong', '_csrf_token' => 'csrf-token', 'altcha' => $payload], [], ['HTTP_ORIGIN' => 'http://localhost']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'Invalid credentials.');
+
+        $this->client->request('POST', '/login', ['_username' => 'lab@example.org', '_password' => self::PASSWORD, '_csrf_token' => 'csrf-token', 'altcha' => $payload], [], ['HTTP_ORIGIN' => 'http://localhost']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'The security check failed.');
     }
 
     public function testWrongPasswordIsReported(): void
@@ -96,7 +149,7 @@ final class SecurityControllerTest extends FunctionalTestCase
         self::assertSelectorTextContains('.alert-danger', 'Invalid credentials.');
     }
 
-    public function testDisabledUsersCannotSignIn(): void
+    public function testDisabledUsersSignInAndSeeTheWaitForApprovalMessage(): void
     {
         $user = $this->user();
         $user->deactivate();
@@ -104,14 +157,16 @@ final class SecurityControllerTest extends FunctionalTestCase
         $this->entityManager->flush();
 
         $this->signIn(self::PASSWORD);
+        self::assertResponseRedirects('/');
         $this->client->followRedirect();
 
-        self::assertSelectorTextContains('.alert-danger', 'Your account has been disabled.');
+        self::assertSelectorTextContains('.alert-info', 'Please wait for an administrator to enable your account.');
+        self::assertSelectorNotExists('form[data-controller="search-form"]');
     }
 
     private function signIn(string $password): void
     {
-        $this->client->request('POST', '/login', ['_username' => 'lab@example.org', '_password' => $password, '_csrf_token' => 'csrf-token'], [], ['HTTP_ORIGIN' => 'http://localhost']);
+        $this->client->request('POST', '/login', ['_username' => 'lab@example.org', '_password' => $password, '_csrf_token' => 'csrf-token', 'altcha' => $this->altchaPayload(AltchaPurpose::Login)], [], ['HTTP_ORIGIN' => 'http://localhost']);
     }
 
     private function user(): User

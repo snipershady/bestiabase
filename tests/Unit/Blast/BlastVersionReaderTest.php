@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastProcessExecutor;
-use App\Blast\BlastVersionReader;
-use App\Blast\Process\ProcessResult;
 use App\Enum\BlastProgram;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\BlastVersionReader;
+use App\Service\Blast\Process\ProcessResult;
 use App\Tests\Support\FakeBlastInstallation;
 use App\Tests\Support\RecordingProcessRunner;
 use Override;

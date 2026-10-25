@@ -1,0 +1,15 @@
+{# Widget ALTCHA: sfida firmata dal server, risolta nel browser appena la pagina si carica.
+   Parametro: challenge (JSON). Va dentro un elemento con data-controller="altcha". #}
+<altcha-widget
+    auto="onload"
+    challenge="{{ challenge }}"
+    data-action="verified->altcha#verified"
+    strings="{{ {
+        error: 'Verification failed. Reload the page and try again.',
+        expired: 'The verification expired. Reload the page.',
+        footer: 'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener noreferrer">ALTCHA</a>',
+        label: 'I am human',
+        verified: 'Verified',
+        verifying: 'Verifying…',
+        waitAlert: 'Verifying… please wait.',
+    }|json_encode }}"></altcha-widget>

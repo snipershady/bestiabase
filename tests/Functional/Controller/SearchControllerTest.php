@@ -4,35 +4,42 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Exception\InvalidFastaException;
-use App\Blast\Exception\InvalidSearchParametersException;
-use App\Blast\Fasta\FastaDocument;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Fasta\FastaRecord;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Job\BlastSearchRequest;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\SearchController;
 use App\Entity\BlastDatabase;
 use App\Entity\BlastDatabaseProgram;
 use App\Entity\BlastJob;
+use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Exception\IncompatibleProgramException;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
-use App\Message\RunBlastJob;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\BlastJobRepository;
+use App\Repository\UserRepository;
+use App\Security\BlastDatabaseVoter;
+use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Exception\InvalidFastaException;
+use App\Service\Blast\Exception\InvalidSearchParametersException;
+use App\Service\Blast\Fasta\FastaDocument;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Fasta\FastaRecord;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Job\BlastSearchRequest;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\Message\RunBlastJob;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
@@ -71,6 +78,13 @@ use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 #[UsesClass(InvalidSearchParametersException::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
+#[UsesClass(User::class)]
+#[UsesClass(UserRepository::class)]
+#[UsesClass(BlastDatabaseVoter::class)]
+#[UsesClass(BlastJobVoter::class)]
 final class SearchControllerTest extends FunctionalTestCase
 {
     private BlastDatabase $nucleotide;
@@ -86,7 +100,12 @@ final class SearchControllerTest extends FunctionalTestCase
         $inactive = $this->database('retired_db', MolType::Nucleotide);
         $inactive->deactivate();
 
+        // Le ricerche dal web sono riservate agli utenti abilitati.
+        $user = EntityFactory::user('searcher@example.org', 'searcher');
+        $this->entityManager->persist($user);
         $this->entityManager->flush();
+
+        $this->client->loginUser($user);
     }
 
     public function testFormListsActiveDatabasesWithTheirPrograms(): void
@@ -104,6 +123,15 @@ final class SearchControllerTest extends FunctionalTestCase
         self::assertIsArray($config);
         self::assertIsArray($config['blastn'] ?? null);
         self::assertSame(['nucleotideScoring', 'gapCosts', 'ungapped'], $config['blastn']['fields'] ?? null);
+    }
+
+    public function testAnonymousVisitorsWithoutTheSecurityCheckAreSentToIt(): void
+    {
+        $this->client->getCookieJar()->clear();
+
+        $this->client->request('GET', '/');
+
+        self::assertResponseRedirects('/security-check');
     }
 
     public function testBasicSearchIsQueuedAndRedirectsToTheJob(): void

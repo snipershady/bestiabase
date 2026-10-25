@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\Process\ProcessResult;
-use App\Blast\Process\SymfonyProcessRunner;
+use App\Service\Blast\Process\ProcessResult;
+use App\Service\Blast\Process\SymfonyProcessRunner;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

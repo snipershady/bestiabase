@@ -9,6 +9,7 @@ use App\Entity\BlastDatabaseProgram;
 use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
+use App\Enum\UserRole;
 use App\Exception\IncompatibleProgramException;
 use App\Tests\Support\EntityFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -135,9 +136,13 @@ final class BlastDatabaseTest extends TestCase
         $user = EntityFactory::user('user@example.org', 'user');
         $other = EntityFactory::user('other@example.org', 'other');
         $admin = EntityFactory::user('admin@example.org', 'admin');
-        $admin->grantRole(User::ROLE_ADMIN);
+        $admin->grantRole(UserRole::Admin);
 
         self::assertTrue($database->isSearchableBy(null), 'public: also anonymous visitors');
+
+        $disabled = EntityFactory::user('disabled@example.org', 'disabled');
+        $disabled->deactivate();
+        self::assertFalse($database->isAccessibleBy($disabled), 'disabled accounts reach nothing, not even public databases');
 
         $database->restrict();
         $database->authorize($user);

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastProcessExecutor;
-use App\Blast\BlastTool;
-use App\Blast\Process\SymfonyProcessRunner;
 use App\Enum\MolType;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\BlastTool;
+use App\Service\Blast\Process\SymfonyProcessRunner;
 use TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService;
 
 /**

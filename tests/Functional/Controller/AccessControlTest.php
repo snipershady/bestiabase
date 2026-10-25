@@ -4,23 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Fasta\FastaDocument;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Fasta\FastaRecord;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Job\BlastSearchRequest;
-use App\Blast\Job\JobStatusView;
-use App\Blast\JobWorkspace;
-use App\Blast\Result\HitFilter;
-use App\Blast\Result\TabularExporter;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\JobController;
 use App\Controller\MyJobsController;
 use App\Controller\SearchController;
@@ -30,10 +13,11 @@ use App\Entity\BlastJob;
 use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\JobStatus;
+use App\Enum\UserRole;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
-use App\Message\RunBlastJob;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\BlastHitRepository;
 use App\Repository\BlastJobRepository;
@@ -41,6 +25,26 @@ use App\Repository\UserRepository;
 use App\Security\BlastDatabaseVoter;
 use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Fasta\FastaDocument;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Fasta\FastaRecord;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Job\BlastSearchRequest;
+use App\Service\Blast\Job\JobStatusView;
+use App\Service\Blast\JobWorkspace;
+use App\Service\Blast\Result\HitFilter;
+use App\Service\Blast\Result\TabularExporter;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\Message\RunBlastJob;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
@@ -90,6 +94,9 @@ use Symfony\Component\DomCrawler\Crawler;
 #[UsesClass(BlastJobVoter::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
 final class AccessControlTest extends FunctionalTestCase
 {
     private User $member;
@@ -104,7 +111,7 @@ final class AccessControlTest extends FunctionalTestCase
         parent::setUp();
         $this->member = EntityFactory::user('member@example.org', 'member');
         $this->admin = EntityFactory::user('admin@example.org', 'admin');
-        $this->admin->grantRole(User::ROLE_ADMIN);
+        $this->admin->grantRole(UserRole::Admin);
 
         $public = EntityFactory::database('human_db');
         $public->rename('Human');
@@ -125,7 +132,8 @@ final class AccessControlTest extends FunctionalTestCase
 
     public function testSearchFormListsOnlyTheDatabasesOfTheVisitor(): void
     {
-        self::assertSame(['Human'], $this->databaseOptions());
+        $this->client->request('GET', '/');
+        self::assertSelectorNotExists('form[data-controller="search-form"]', 'anonymous visitors cannot search');
 
         $this->client->loginUser($this->member);
         self::assertSame(['Human', 'Mouse'], $this->databaseOptions());
@@ -139,6 +147,7 @@ final class AccessControlTest extends FunctionalTestCase
 
     public function testRestrictedDatabaseCannotBeForcedIntoASearch(): void
     {
+        $this->client->loginUser($this->persisted(EntityFactory::user('stranger@example.org', 'stranger')));
         $this->client->request('POST', '/', ['search_form' => ['_token' => 'csrf-token', 'program' => 'blastn', 'query' => 'ACGT', 'databases' => [(string) $this->restricted->getId()], 'basic' => '']], [], ['HTTP_ORIGIN' => 'http://localhost']);
 
         self::assertResponseStatusCodeSame(422);
@@ -178,7 +187,7 @@ final class AccessControlTest extends FunctionalTestCase
 
         $this->client->loginUser($this->admin);
         $this->client->request('GET', $url . '/hits.tsv');
-        self::assertResponseStatusCodeSame(404, 'administrators get past the access check (the job has no results yet)');
+        self::assertResponseRedirects('/nopainnogain', null, 'administrators get past the access check (the job has no results yet)');
     }
 
     public function testMySearchesListsOnlyTheJobsOfTheUser(): void

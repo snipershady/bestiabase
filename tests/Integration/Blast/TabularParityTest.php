@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\BlastProcessExecutor;
-use App\Blast\BlastResultImporter;
-use App\Blast\Fasta\FastaDocument;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Process\SymfonyProcessRunner;
-use App\Blast\Result\TabularExporter;
-use App\Blast\Xml\BlastXmlParser;
 use App\Entity\BlastJob;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
 use App\Enum\SearchType;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\BlastResultImporter;
+use App\Service\Blast\Fasta\FastaDocument;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Process\SymfonyProcessRunner;
+use App\Service\Blast\Result\TabularExporter;
+use App\Service\Blast\Xml\BlastXmlParser;
 use App\Tests\Support\DatabaseTestCase;
 use App\Tests\Support\DemoBlastDatabases;
 use App\Tests\Support\EntityFactory;

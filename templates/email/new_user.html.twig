@@ -1,0 +1,8 @@
+<p>Hello {{ administrator }},</p>
+<p>A new user has registered on BestiaBase and is waiting to be enabled:</p>
+<ul>
+    <li>Username: {{ newUsername }}</li>
+    <li>Email: {{ newEmail }}</li>
+    <li>Registered: {{ registeredAt }}</li>
+</ul>
+<p>The account can be enabled only after the user has confirmed the email address. Manage users here: <a href="{{ usersUrl }}">{{ usersUrl }}</a></p>

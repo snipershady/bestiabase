@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Result;
 
-use App\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\BlastNumberFormat;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

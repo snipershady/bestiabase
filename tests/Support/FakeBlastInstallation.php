@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastTool;
 use App\Enum\BlastProgram;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastTool;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use App\Blast\Result\BlastNumberFormat;
 use App\Enum\MolType;
+use App\Service\Blast\Result\BlastNumberFormat;
 use Twig\Attribute\AsTwigFilter;
 use Twig\Attribute\AsTwigFunction;
 

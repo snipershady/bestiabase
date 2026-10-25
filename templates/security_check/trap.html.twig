@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex, nofollow">
+        {# Turbo e il widget ALTCHA applicano questo nonce ai loro stili. #}
+        <meta name="csp-nonce" content="{{ csp_nonce() }}">
+        <title>No pain no gain · BestiaBase</title>
+        <link rel="stylesheet" href="{{ asset('vendor/bootstrap/dist/css/bootstrap.min.css') }}">
+        {{ importmap('app', {nonce: csp_nonce()}) }}
+        {{ include('_partials/altcha_script.html.twig') }}
+    </head>
+    <body>
+        <main class="min-vh-100 d-flex flex-column align-items-center justify-content-center text-center" data-controller="altcha" data-altcha-redirect-value="{{ path('app_search') }}">
+            <p class="display-1 mb-1" aria-hidden="true">🧬</p>
+            <p class="h4 mb-4">BestiaBase</p>
+            {{ include('_partials/altcha.html.twig', {challenge: altcha_challenge}) }}
+        </main>
+    </body>
+</html>

@@ -14,6 +14,7 @@
         {% block javascripts %}
             {% block importmap %}{{ importmap('app', {nonce: csp_nonce()}) }}{% endblock %}
         {% endblock %}
+        {% block altcha_script %}{% endblock %}
     </head>
     <body class="d-flex flex-column min-vh-100">
         <header class="bb-header navbar navbar-dark navbar-expand-md">
@@ -22,13 +23,26 @@
                 <ul class="navbar-nav ms-auto flex-row gap-3">
                     <li class="nav-item"><a class="nav-link" href="{{ path('app_help') }}">Help</a></li>
                     {% if app.user %}
-                        <li class="nav-item"><a class="nav-link" href="{{ path('app_my_jobs') }}">My searches</a></li>
+                        {% if is_granted('ROLE_USER') %}
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_my_jobs') }}">My searches</a></li>
+                        {% endif %}
                         {% if is_granted('ROLE_ADMIN') %}
                             <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_databases') }}">Administration</a></li>
                         {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Sign out ({{ app.user.username }})</a></li>
+                        <li class="nav-item">
+                            {# Menu senza JavaScript di Bootstrap: <details> si apre e si chiude da solo, il controller lo chiude anche con un clic fuori o Esc. #}
+                            <details class="dropdown bb-usermenu" data-controller="usermenu" data-action="click@document->usermenu#close keydown.esc@window->usermenu#close">
+                                <summary class="nav-link" aria-label="User menu">{{ app.user.username }}</summary>
+                                <ul class="dropdown-menu dropdown-menu-end show">
+                                    <li><a class="dropdown-item" href="{{ path('app_account_password') }}">Change password</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_logout') }}">Sign out</a></li>
+                                </ul>
+                            </details>
+                        </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{{ path('app_login') }}">Sign in</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ path('app_register') }}">Register</a></li>
                     {% endif %}
                 </ul>
             </nav>

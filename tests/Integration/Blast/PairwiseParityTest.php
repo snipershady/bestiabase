@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\BlastProcessExecutor;
-use App\Blast\Fasta\FastaDocument;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Fasta\FastaRecord;
-use App\Blast\Process\SymfonyProcessRunner;
-use App\Blast\Result\PairwiseRenderer;
-use App\Blast\Xml\BlastXmlParser;
 use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\Fasta\FastaDocument;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Fasta\FastaRecord;
+use App\Service\Blast\Process\SymfonyProcessRunner;
+use App\Service\Blast\Result\PairwiseRenderer;
+use App\Service\Blast\Xml\BlastXmlParser;
 use App\Tests\Support\DemoBlastDatabases;
 use App\Tests\Support\EntityFactory;
 use Override;

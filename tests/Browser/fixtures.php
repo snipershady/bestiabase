@@ -15,6 +15,7 @@ use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
+use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
 use App\Enum\SearchType;
@@ -43,6 +44,7 @@ $teardown = static function () use ($connection): void {
     // Le FK cancellano in cascata query, hit, HSP e download dei job.
     $connection->executeStatement("DELETE FROM blast_job WHERE JSON_SEARCH(database_snapshot, 'one', 'browser\\_%', NULL, '$[*].code') IS NOT NULL");
     $connection->executeStatement("DELETE FROM blast_database WHERE code LIKE 'browser\\_%'");
+    $connection->executeStatement("DELETE FROM `user` WHERE email LIKE 'browser\\_%'");
 };
 
 $database = static function (string $code, string $title, MolType $molType) use ($entityManager, $now): BlastDatabase {
@@ -68,6 +70,11 @@ if ($command === 'seed') {
     $teardown();
     $nucleotide = $database('browser_na', 'Browser nucleotides', MolType::Nucleotide);
     $database('browser_aa', 'Browser proteins', MolType::Protein);
+    // L'utente abilitato che esegue le ricerche (password: BROWSER_PASSWORD in support.mjs).
+    $user = new User('browser_user@example.org', 'browser_user', password_hash('browser test password', \PASSWORD_BCRYPT, ['cost' => 4]), $now);
+    $user->activate();
+    $user->verifyEmail($now);
+    $entityManager->persist($user);
     $pending = $job($nucleotide);
     $finished = $job($nucleotide);
     $finished->start($now);

@@ -26,3 +26,18 @@ services:
     TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService: ~
     TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierServiceInterface:
         alias: TypeIdentifier\Service\EffectivePrimitiveTypeIdentifierService
+
+    # snipershady/emailvalidator: il resolver MX (DNS) si inietta, così i test non fanno rete.
+    EmailValidator\Service\DnsMxResolver: ~
+    EmailValidator\Service\MxResolver:
+        alias: EmailValidator\Service\DnsMxResolver
+    EmailValidator\Service\EmailValidator: ~
+
+when@test:
+    services:
+        _defaults:
+            autowire: true
+        App\Tests\Support\FakeMxResolver: ~
+        EmailValidator\Service\MxResolver:
+            alias: App\Tests\Support\FakeMxResolver
+            public: true

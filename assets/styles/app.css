@@ -7,6 +7,20 @@
     letter-spacing: 0.02em;
 }
 
+.bb-usermenu > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.bb-usermenu > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Chiuso, il menu non si vede: Bootstrap lo mostra con .show, qui lo governa <details>. */
+.bb-usermenu:not([open]) > .dropdown-menu {
+    display: none;
+}
+
 .bb-header {
     background-color: var(--bb-brand);
 }

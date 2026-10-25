@@ -4,29 +4,42 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Security;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\SearchController;
 use App\Controller\SecurityController;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\BlastJobRepository;
+use App\Security\BlastDatabaseVoter;
+use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Altcha\AltchaChallengeFactory;
+use App\Service\Altcha\AltchaDifficulties;
+use App\Service\Altcha\AltchaDifficulty;
+use App\Service\Altcha\AltchaSecret;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
 use DOMElement;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 #[CoversClass(SecurityHeadersListener::class)]
 #[CoversClass(SecurityExtension::class)]
@@ -47,8 +60,41 @@ use PHPUnit\Framework\Attributes\UsesClass;
 #[UsesClass(SearchFormType::class)]
 #[UsesClass(BlastDatabaseRepository::class)]
 #[UsesClass(BlastJobRepository::class)]
+#[UsesClass(AltchaChallengeFactory::class)]
+#[UsesClass(AltchaDifficulties::class)]
+#[UsesClass(AltchaDifficulty::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
+#[UsesClass(AltchaSecret::class)]
+#[UsesClass(BlastDatabaseVoter::class)]
+#[UsesClass(BlastJobVoter::class)]
 final class SecurityHeadersTest extends FunctionalTestCase
 {
+    public function testInDebugModeTheProfilerReusesTheNonceOfThePage(): void
+    {
+        foreach ([true, false] as $debug) {
+            $request = new Request();
+            $request->attributes->set(SecurityHeadersListener::NONCE_ATTRIBUTE, 'abc123');
+            $event = new ResponseEvent(self::createStub(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST, new Response());
+
+            new SecurityHeadersListener($debug)->onResponse($event);
+
+            $headers = $event->getResponse()->headers;
+            self::assertSame($debug ? 'abc123' : null, $headers->get('X-SymfonyProfiler-Script-Nonce'));
+            self::assertSame($debug ? 'abc123' : null, $headers->get('X-SymfonyProfiler-Style-Nonce'));
+        }
+    }
+
+    public function testSubRequestsAreLeftAlone(): void
+    {
+        $event = new ResponseEvent(self::createStub(HttpKernelInterface::class), new Request(), HttpKernelInterface::SUB_REQUEST, new Response());
+
+        new SecurityHeadersListener()->onResponse($event);
+
+        self::assertFalse($event->getResponse()->headers->has('Content-Security-Policy'));
+    }
+
     public function testPagesCarryTheSecurityHeadersAndANoncedCsp(): void
     {
         $crawler = $this->client->request('GET', '/');
@@ -61,6 +107,7 @@ final class SecurityHeadersTest extends FunctionalTestCase
         self::assertStringContainsString("style-src 'self' 'nonce-{$nonce}'", $csp);
         self::assertStringContainsString("frame-ancestors 'none'", $csp);
         self::assertStringContainsString("object-src 'none'", $csp);
+        self::assertStringContainsString("worker-src 'self' blob:", $csp);
         self::assertStringNotContainsString('unsafe-inline', $csp);
         self::assertSame('nosniff', $headers->get('X-Content-Type-Options'));
         self::assertSame('DENY', $headers->get('X-Frame-Options'));
@@ -90,7 +137,7 @@ final class SecurityHeadersTest extends FunctionalTestCase
     {
         $this->client->request('GET', '/job/01a16e36-1f83-7128-a937-e08ba427daa6/status');
 
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
         self::assertSame('nosniff', $this->client->getResponse()->headers->get('X-Content-Type-Options'));
     }
 }

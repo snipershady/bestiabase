@@ -35,6 +35,10 @@ final class BlastDatabaseRepository extends ServiceEntityRepository
             return $builder->andWhere($alias . '.public = true');
         }
 
+        if (!$user->isActive()) {
+            return $builder->andWhere('1 = 0');
+        }
+
         if ($user->isAdmin()) {
             return $builder;
         }

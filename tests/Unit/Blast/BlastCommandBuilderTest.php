@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Exception\InvalidSearchParametersException;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\NucleotideScoring;
-use App\Blast\Search\ScoringMatrix;
-use App\Blast\Search\SearchParameters;
 use App\Enum\BlastProgram;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Exception\InvalidSearchParametersException;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\NucleotideScoring;
+use App\Service\Blast\Search\ScoringMatrix;
+use App\Service\Blast\Search\SearchParameters;
 use App\Tests\Support\FakeBlastInstallation;
 use InvalidArgumentException;
 use Override;

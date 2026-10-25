@@ -5,3 +5,19 @@ framework:
             policy: sliding_window
             limit: '%env(int:BLAST_SEARCH_RATE_LIMIT)%'
             interval: '%env(BLAST_SEARCH_RATE_INTERVAL)%'
+
+        # Registrazioni pubbliche e richieste di reset password per indirizzo IP: ognuna può creare
+        # un account o inviare un'e-mail.
+        registration:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        password_reset:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+        # Rinvii del link di conferma dell'e-mail, per utente.
+        email_verification:
+            policy: sliding_window
+            limit: 3
+            interval: '1 hour'

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastTool;
-use App\Blast\Exception\BlastBinaryNotFoundException;
 use App\Enum\BlastProgram;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastTool;
+use App\Service\Blast\Exception\BlastBinaryNotFoundException;
 use App\Tests\Support\FakeBlastInstallation;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;

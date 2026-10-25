@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
 use App\Enum\SearchType;
+use App\Enum\UserRole;
 use App\Repository\BlastDatabaseRepository;
 use App\Security\BlastDatabaseVoter;
 use App\Security\BlastJobVoter;
@@ -51,7 +52,7 @@ final class AccessRulesTest extends DatabaseTestCase
         $this->owner = $this->user('owner');
         $this->other = $this->user('other');
         $this->admin = $this->user('admin');
-        $this->admin->grantRole(User::ROLE_ADMIN);
+        $this->admin->grantRole(UserRole::Admin);
 
         $this->public = $this->database('a_public', true);
         $this->restricted = $this->database('b_restricted', false);
@@ -72,8 +73,22 @@ final class AccessRulesTest extends DatabaseTestCase
         self::assertSame(['a_public'], $this->selectable(BlastProgram::Blastn, $this->other));
         self::assertSame(['a_public', 'b_restricted'], $this->selectable(BlastProgram::Blastn, $this->owner));
         self::assertSame(['a_public', 'b_restricted'], $this->selectable(BlastProgram::Blastn, $this->admin), 'administrators: every active database');
+
+        $this->owner->deactivate();
+        self::assertSame([], $this->selectable(BlastProgram::Blastn, $this->owner), 'disabled accounts search nothing');
         self::assertSame(['b_restricted'], $codes($repository->findRestricted()));
         self::assertSame(['a_public', 'b_restricted', 'c_inactive'], $codes($repository->findAllByTitle()));
+    }
+
+    public function testDisabledAccountsSeeNoJobsAndNoDatabases(): void
+    {
+        $job = $this->job([$this->public], $this->owner);
+        $this->admin->deactivate();
+        $this->owner->deactivate();
+
+        self::assertFalse($this->canView($this->owner, $job), 'the owner is disabled');
+        self::assertFalse($this->canView($this->admin, $job), 'a disabled administrator has no privileges');
+        self::assertFalse($this->public->isAccessibleBy($this->owner));
     }
 
     public function testDatabaseVoter(): void

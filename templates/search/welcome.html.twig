@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-7">
+            <section aria-labelledby="about-title">
+                <h1 class="h3 mb-3" id="about-title">About BestiaBase</h1>
+                <p>BestiaBase is a web server for similarity searches with NCBI BLAST+ (blastn, blastp, blastx, tblastn and tblastx) against sequence databases. Paste your query, pick a database and read the alignments, with the hits, scores and downloads, as soon as the search finishes.</p>
+                <p class="text-body-secondary">Searches are available to registered users. Create an account, confirm your email address and an administrator will enable it.</p>
+                <p class="d-flex gap-2">
+                    <a class="btn btn-primary" href="{{ path('app_login') }}">Sign in</a>
+                    <a class="btn btn-outline-primary" href="{{ path('app_register') }}">Register</a>
+                </p>
+            </section>
+        </div>
+    </div>
+{% endblock %}

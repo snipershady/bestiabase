@@ -43,6 +43,10 @@ final class BlastJobVoter extends Voter
         $user = $token->getUser();
         $user = $user instanceof User ? $user : null;
 
+        if ($user?->isActive() === false) {
+            return false;
+        }
+
         if ($user?->isAdmin() === true) {
             return true;
         }

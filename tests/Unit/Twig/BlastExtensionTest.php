@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Twig;
 
-use App\Blast\Result\BlastNumberFormat;
 use App\Enum\MolType;
+use App\Service\Blast\Result\BlastNumberFormat;
 use App\Twig\BlastExtension;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

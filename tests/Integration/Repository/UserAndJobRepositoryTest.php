@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Repository;
 use App\Entity\BlastDatabase;
 use App\Entity\BlastJob;
 use App\Entity\User;
+use App\Enum\UserRole;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\BlastJobRepository;
 use App\Repository\UserRepository;
@@ -40,6 +41,21 @@ final class UserAndJobRepositoryTest extends DatabaseTestCase
         $this->entityManager->clear();
 
         self::assertSame('new-hash', $users->findOneBy(['email' => 'ada@example.org'])?->getPassword());
+    }
+
+    public function testAdministratorsAreOnlyTheEnabledOnes(): void
+    {
+        $admin = EntityFactory::user('admin@example.org', 'admin');
+        $admin->grantRole(UserRole::Admin);
+
+        $suspended = EntityFactory::user('suspended@example.org', 'suspended');
+        $suspended->grantRole(UserRole::Admin);
+        $suspended->deactivate();
+        $this->persistAndReload($admin, $suspended, EntityFactory::user('plain@example.org', 'plain'));
+
+        $emails = array_map(static fn (User $user): string => $user->getEmail(), self::getContainer()->get(UserRepository::class)->findAdministrators());
+
+        self::assertSame(['admin@example.org'], $emails);
     }
 
     public function testOnlyApplicationUsersCanBeUpgraded(): void

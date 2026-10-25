@@ -47,4 +47,14 @@ final class UserRepository extends ServiceEntityRepository implements PasswordUp
 
         return $users;
     }
+
+    /**
+     * Amministratori abilitati, in ordine di e-mail.
+     *
+     * @return list<User>
+     */
+    public function findAdministrators(): array
+    {
+        return array_values(array_filter($this->findAllByEmail(), static fn (User $user): bool => $user->isAdmin()));
+    }
 }

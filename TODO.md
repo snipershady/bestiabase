@@ -202,7 +202,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 - [x] Importmap: rimossi JavaScript di Bootstrap e Popper (si usa solo il CSS)
 - [?] Pacchetti Composer non usati, lasciati in attesa di decisione: `symfony/notifier` (con `notifier.yaml` e il
   routing Messenger delle notifiche), `symfony/web-link`, `symfony/http-client`, `symfony/intl`,
-  `symfony/expression-language`, `altcha-org/altcha` (captcha mai integrato: utile per le ricerche anonime?)
+  `symfony/expression-language`, `altcha-org/altcha` (ora in uso)
 
 ## Fase 10 — Hardening & docs
 
@@ -222,11 +222,16 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 
 Raccolte dalle fasi precedenti (dettagli nelle rispettive sezioni):
 
-- [?] Pacchetti Composer non usati (notifier, web-link, http-client, intl, expression-language, altcha) — Fase 9
+- [?] Pacchetti Composer non usati (notifier, web-link, http-client, intl, expression-language) — Fase 9
 - [x] Redis: `redis-messenger` e `LOCK_DSN` condiviso
-- [?] Registrazione libera degli utenti — Fase 8
+- [x] Registrazione libera degli utenti: account `ROLE_DISABLED` finché un amministratore non lo abilita
 - [ ] `trusted_proxies` di Symfony dietro Cloudflare/proxy (altrimenti il rate limit vede un solo IP) — README
-- [ ] Recupero password via email; gruppi di utenti — Fase 8
+- [x] Recupero password via e-mail, cambio password, e-mail di abilitazione
+- [ ] Gruppi di utenti — Fase 8
+- [x] Verifica dell'indirizzo e-mail alla registrazione, avviso agli amministratori, `snipershady/emailvalidator`
+- [x] ALTCHA su login e registrazione, verifica di sicurezza prima della home per gli anonimi, rotta `/nopainnogain`
+- [?] `snipershady/emailvalidator` è GPL-2.0-only: compatibile con il software proprietario del progetto?
+- [ ] Tarare le difficoltà ALTCHA (`ALTCHA_*_DIFFICULTY`) sui dispositivi reali degli utenti (telefoni inclusi)
 - [ ] Rimozione del workspace a fine job; regione nucleotidica per "mapping" di tblastn/tblastx; limite di memoria
   per "entire" con molti soggetti lunghi; ordinamento cliccando le colonne — Fasi 4, 6, 7
 - [ ] Prima messa in produzione: `asset-map:compile`, `APP_ENV=prod`, `BLAST_DB_DIR` su volume dedicato

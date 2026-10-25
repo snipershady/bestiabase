@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\BlastResultImporter;
-use App\Blast\ImportSummary;
-use App\Blast\SequenceNames;
-use App\Blast\Xml\BlastXmlParser;
-use App\Blast\Xml\ParsedHit;
-use App\Blast\Xml\ParsedHsp;
-use App\Blast\Xml\ParsedIteration;
 use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
 use App\Repository\BlastHitRepository;
+use App\Service\Blast\BlastResultImporter;
+use App\Service\Blast\ImportSummary;
+use App\Service\Blast\SequenceNames;
+use App\Service\Blast\Xml\BlastXmlParser;
+use App\Service\Blast\Xml\ParsedHit;
+use App\Service\Blast\Xml\ParsedHsp;
+use App\Service\Blast\Xml\ParsedIteration;
 use App\Tests\Support\DatabaseTestCase;
 use App\Tests\Support\EntityFactory;
 use Generator;

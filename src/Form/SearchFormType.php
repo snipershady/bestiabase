@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\NucleotideScoring;
-use App\Blast\Search\ScoringMatrix;
 use App\Entity\BlastDatabase;
 use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Repository\BlastDatabaseRepository;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\NucleotideScoring;
+use App\Service\Blast\Search\ScoringMatrix;
 use Doctrine\ORM\QueryBuilder;
 use Override;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;

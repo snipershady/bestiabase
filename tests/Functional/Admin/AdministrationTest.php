@@ -4,16 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Admin;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\Admin\DatabaseAdminController;
 use App\Controller\Admin\JobAdminController;
 use App\Controller\Admin\UserAdminController;
@@ -24,6 +14,8 @@ use App\Entity\BlastJob;
 use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
+use App\Enum\UserRole;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Form\Admin\DatabaseAdminData;
 use App\Form\Admin\DatabaseAdminType;
 use App\Form\Admin\UserAdminData;
@@ -37,6 +29,19 @@ use App\Repository\UserRepository;
 use App\Security\BlastDatabaseVoter;
 use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\Mail\AccountMailer;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
@@ -70,6 +75,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[UsesClass(BlastProgram::class)]
 #[UsesClass(DatabaseAdminData::class)]
 #[UsesClass(UserAdminData::class)]
+#[UsesClass(AccountMailer::class)]
 #[UsesClass(SearchFormClientConfig::class)]
 #[UsesClass(SearchFormData::class)]
 #[UsesClass(SearchFormType::class)]
@@ -80,6 +86,9 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[UsesClass(BlastJobVoter::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
 final class AdministrationTest extends FunctionalTestCase
 {
     private User $admin;
@@ -93,7 +102,7 @@ final class AdministrationTest extends FunctionalTestCase
     {
         parent::setUp();
         $this->admin = EntityFactory::user('admin@example.org', 'admin');
-        $this->admin->grantRole(User::ROLE_ADMIN);
+        $this->admin->grantRole(UserRole::Admin);
 
         $this->member = EntityFactory::user('member@example.org', 'member');
         $this->database = EntityFactory::database('mouse_db', MolType::Nucleotide);
@@ -225,7 +234,7 @@ final class AdministrationTest extends FunctionalTestCase
         self::assertResponseRedirects('/admin/users');
         $this->entityManager->clear();
         $member = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'member@example.org']) ?? self::fail('user lost');
-        self::assertTrue($member->isAdmin());
+        self::assertTrue($member->hasRole(UserRole::Admin));
         self::assertFalse($member->isActive());
         self::assertTrue(self::getContainer()->get(UserPasswordHasherInterface::class)->isPasswordValid($member, 'another long password'));
     }

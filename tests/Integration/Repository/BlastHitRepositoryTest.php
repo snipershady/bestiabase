@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Repository;
 
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\CutoffType;
-use App\Blast\Result\HitFilter;
-use App\Blast\Result\HitRow;
-use App\Blast\Result\HitSort;
 use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
 use App\Repository\BlastHitRepository;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\CutoffType;
+use App\Service\Blast\Result\HitFilter;
+use App\Service\Blast\Result\HitRow;
+use App\Service\Blast\Result\HitSort;
 use App\Tests\Support\DatabaseTestCase;
 use App\Tests\Support\EntityFactory;
 use PHPUnit\Framework\Attributes\CoversClass;

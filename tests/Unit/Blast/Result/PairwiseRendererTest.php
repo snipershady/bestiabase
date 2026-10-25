@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Result;
 
-use App\Blast\Result\AlignmentBlock;
-use App\Blast\Result\AlignmentCoordinates;
-use App\Blast\Result\AlignmentRow;
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\HspAlignment;
-use App\Blast\Result\PairwiseRenderer;
 use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
 use App\Enum\BlastProgram;
+use App\Service\Blast\Result\AlignmentBlock;
+use App\Service\Blast\Result\AlignmentCoordinates;
+use App\Service\Blast\Result\AlignmentRow;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\HspAlignment;
+use App\Service\Blast\Result\PairwiseRenderer;
 use App\Tests\Support\EntityFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;

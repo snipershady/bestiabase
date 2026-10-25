@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Security check{% endblock %}
+
+{% block altcha_script %}{{ include('_partials/altcha_script.html.twig') }}{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center text-center py-5" data-controller="altcha" data-altcha-submit-value="true">
+        <div class="col-md-8 col-lg-5">
+            <h1 class="h3 mb-3">Security check</h1>
+            <p class="text-body-secondary">We are verifying that you are a human. This takes a few seconds and you will be taken to the page automatically.</p>
+
+            {% if failed %}
+                <div class="alert alert-danger" role="alert">The security check failed. It restarts now.</div>
+            {% endif %}
+
+            <div class="d-flex justify-content-center my-4">{{ include('_partials/altcha.html.twig', {challenge: altcha_challenge}) }}</div>
+
+            <form method="post" action="{{ path('app_security_check') }}" data-altcha-target="form" data-turbo="false">
+                <input type="hidden" name="altcha" data-altcha-target="field">
+                <noscript><p class="text-danger">This check needs JavaScript.</p></noscript>
+            </form>
+        </div>
+    </div>
+{% endblock %}

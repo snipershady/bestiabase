@@ -17,6 +17,7 @@
                     <th scope="col">Role</th>
                     <th scope="col">Restricted databases</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Email</th>
                     <th scope="col">Last sign in</th>
                     <th scope="col"><span class="visually-hidden">Actions</span></th>
                 </tr>
@@ -26,13 +27,22 @@
                     <tr>
                         <td>{{ user.email }}</td>
                         <td>{{ user.username }}</td>
-                        <td>{{ user.admin ? 'administrator' : 'user' }}</td>
+                        <td>{{ user.active ? (user.admin ? 'administrator' : 'user') : '–' }}</td>
                         <td class="small">
                             {% if user.admin %}all{% else %}{{ restricted|filter(d => user in d.authorizedUsers)|map(d => d.code)|join(', ')|default('–') }}{% endif %}
                         </td>
                         <td><span class="badge text-bg-{{ user.active ? 'primary' : 'secondary' }}">{{ user.active ? 'active' : 'disabled' }}</span></td>
+                        <td><span class="badge text-bg-{{ user.emailVerified ? 'success' : 'warning' }}">{{ user.emailVerified ? 'confirmed' : 'not confirmed' }}</span></td>
                         <td>{{ user.lastLoginAt ? user.lastLoginAt|date('Y-m-d H:i') : '–' }}</td>
-                        <td><a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_user_edit', {id: user.id}) }}">Edit</a></td>
+                        <td class="text-nowrap">
+                            {% if not user.active and user.emailVerified %}
+                                <form class="d-inline" method="post" action="{{ path('app_admin_user_enable', {id: user.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('enable-user-' ~ user.id) }}">
+                                    <button class="btn btn-sm btn-success" type="submit">Enable</button>
+                                </form>
+                            {% endif %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_admin_user_edit', {id: user.id}) }}">Edit</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

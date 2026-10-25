@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast;
 
-use App\Blast\SequenceNames;
-use App\Blast\Xml\ParsedHit;
+use App\Service\Blast\SequenceNames;
+use App\Service\Blast\Xml\ParsedHit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;

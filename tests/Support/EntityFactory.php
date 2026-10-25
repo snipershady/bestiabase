@@ -35,6 +35,22 @@ final class EntityFactory
      */
     public static function user(string $email = 'user@example.org', string $username = 'user'): User
     {
+        $user = new User($email, $username, 'hashed-password', self::now());
+        // Un utente nuovo è disabilitato e con l'e-mail da confermare: i test lavorano di norma con un account pronto.
+        $user->activate();
+        $user->verifyEmail(self::now());
+
+        return $user;
+    }
+
+    /**
+     * Utente appena registrato: disabilitato e con l'e-mail ancora da confermare.
+     *
+     * @param non-empty-string $email
+     * @param non-empty-string $username
+     */
+    public static function pendingUser(string $email = 'pending@example.org', string $username = 'pending'): User
+    {
         return new User($email, $username, 'hashed-password', self::now());
     }
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Database;
 
-use App\Blast\Database\BlastDatabaseStorage;
 use App\Entity\BlastDatabase;
 use App\Enum\MolType;
+use App\Service\Blast\Database\BlastDatabaseStorage;
 use App\Tests\Support\EntityFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Database;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastProcessExecutor;
-use App\Blast\Database\BlastDatabaseInspector;
-use App\Blast\Database\BlastDatabaseMetadata;
-use App\Blast\Exception\DatabaseImportException;
-use App\Blast\Process\ProcessResult;
 use App\Enum\MolType;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\Database\BlastDatabaseInspector;
+use App\Service\Blast\Database\BlastDatabaseMetadata;
+use App\Service\Blast\Exception\DatabaseImportException;
+use App\Service\Blast\Process\ProcessResult;
 use App\Tests\Support\FakeBlastInstallation;
 use App\Tests\Support\RecordingProcessRunner;
 use Override;

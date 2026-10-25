@@ -4,23 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastProcessExecutor;
-use App\Blast\Database\BlastDatabaseStorage;
-use App\Blast\Job\JobStatusView;
-use App\Blast\JobWorkspace;
-use App\Blast\Result\AlignmentBlock;
-use App\Blast\Result\AlignmentCoordinates;
-use App\Blast\Result\AlignmentRow;
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\DownloadRequest;
-use App\Blast\Result\HitFilter;
-use App\Blast\Result\HitRow;
-use App\Blast\Result\HspAlignment;
-use App\Blast\Result\PairwiseRenderer;
-use App\Blast\Result\SequenceExtractor;
-use App\Blast\Result\TabularExporter;
-use App\Blast\SequenceNames;
 use App\Controller\JobController;
 use App\Entity\BlastDatabase;
 use App\Entity\BlastDatabaseProgram;
@@ -32,12 +15,31 @@ use App\Entity\BlastQuery;
 use App\Enum\BlastProgram;
 use App\Enum\JobStatus;
 use App\Enum\SearchType;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\BlastHitRepository;
 use App\Repository\BlastJobRepository;
 use App\Security\BlastDatabaseVoter;
 use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastProcessExecutor;
+use App\Service\Blast\Database\BlastDatabaseStorage;
+use App\Service\Blast\Job\JobStatusView;
+use App\Service\Blast\JobWorkspace;
+use App\Service\Blast\Result\AlignmentBlock;
+use App\Service\Blast\Result\AlignmentCoordinates;
+use App\Service\Blast\Result\AlignmentRow;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\DownloadRequest;
+use App\Service\Blast\Result\HitFilter;
+use App\Service\Blast\Result\HitRow;
+use App\Service\Blast\Result\HspAlignment;
+use App\Service\Blast\Result\PairwiseRenderer;
+use App\Service\Blast\Result\SequenceExtractor;
+use App\Service\Blast\Result\TabularExporter;
+use App\Service\Blast\SequenceNames;
+use App\Service\SecurityCheck\SecurityCheckCookie;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\BlastExtension;
@@ -81,6 +83,8 @@ use Symfony\Component\Uid\Uuid;
 #[UsesClass(BlastJobVoter::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
 final class JobControllerTest extends FunctionalTestCase
 {
     public function testStatusOfARunningJob(): void
@@ -152,13 +156,13 @@ final class JobControllerTest extends FunctionalTestCase
     public function testUnknownOrMalformedIdsAreNotFound(): void
     {
         $this->client->request('GET', '/job/' . Uuid::v7()->toRfc4122() . '/status');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
 
         $this->client->request('GET', '/job/../../etc/passwd/status');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
 
         $this->client->request('GET', '/job/169999999912/status');
-        self::assertResponseStatusCodeSame(404, 'legacy numeric job ids are not accepted');
+        self::assertResponseRedirects('/nopainnogain', null, 'legacy numeric job ids are not accepted');
     }
 
     public function testFinishedJobShowsTheResultsTableWithNcbiLinks(): void
@@ -218,7 +222,7 @@ final class JobControllerTest extends FunctionalTestCase
         [, $foreignHit] = $this->finishedJob();
 
         $this->download($job, ['type' => 'entire', 'hits' => [(string) $hit->getId(), (string) $foreignHit->getId()]]);
-        self::assertResponseStatusCodeSame(404, 'hits of another job');
+        self::assertResponseRedirects('/nopainnogain', null, 'hits of another job');
 
         $this->download($job, ['type' => 'entire']);
         self::assertResponseStatusCodeSame(400, 'no hit selected');
@@ -301,7 +305,7 @@ final class JobControllerTest extends FunctionalTestCase
 
         $this->client->request('GET', '/job/' . $other->getId()->toRfc4122() . '/hit/' . $hit->getId());
 
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
     }
 
     public function testQueryPageListsItsHitsAndUnknownQueriesAreNotFound(): void
@@ -318,7 +322,7 @@ final class JobControllerTest extends FunctionalTestCase
         self::assertSelectorTextContains('.alert-info', 'No hits on this page.');
 
         $this->client->request('GET', $url . '9');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
     }
 
     public function testTabularDownload(): void
@@ -352,7 +356,7 @@ final class JobControllerTest extends FunctionalTestCase
         }
 
         $this->client->request('GET', '/job/' . $job->getId()->toRfc4122() . '/output.xml');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/nopainnogain');
     }
 
     public function testDownloadsOfAnUnfinishedJobAreNotFound(): void
@@ -361,7 +365,7 @@ final class JobControllerTest extends FunctionalTestCase
 
         foreach (['/hits.tsv', '/output.xml'] as $download) {
             $this->client->request('GET', '/job/' . $job->getId()->toRfc4122() . $download);
-            self::assertResponseStatusCodeSame(404, $download);
+            self::assertResponseRedirects('/nopainnogain', null, $download);
         }
     }
 

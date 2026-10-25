@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Entity\User;
+use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -70,8 +71,12 @@ final readonly class CreateUserCommand
         $user = new User($email, trim($username), 'not-set', $this->clock->now());
         $user->changePassword($this->passwordHasher->hashPassword($user, $password));
 
+        // Creato da un amministratore dal terminale: nasce già abilitato.
+        $user->activate();
+        $user->verifyEmail($this->clock->now());
+
         if ($admin) {
-            $user->grantRole(User::ROLE_ADMIN);
+            $user->grantRole(UserRole::Admin);
         }
 
         $this->entityManager->persist($user);

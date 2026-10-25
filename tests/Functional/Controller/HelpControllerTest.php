@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Blast\BlastBinaryLocator;
-use App\Blast\BlastCommandBuilder;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Job\BlastJobFactory;
-use App\Blast\Job\BlastJobSubmitter;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\SearchParameters;
-use App\Blast\Search\SearchParametersNormalizer;
 use App\Controller\HelpController;
 use App\Controller\SearchController;
+use App\Entity\User;
+use App\EventSubscriber\NotFoundSubscriber;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
 use App\Repository\BlastDatabaseRepository;
+use App\Repository\UserRepository;
+use App\Security\BlastDatabaseVoter;
+use App\Security\BlastJobVoter;
 use App\Security\SecurityHeadersListener;
+use App\Service\Blast\BlastBinaryLocator;
+use App\Service\Blast\BlastCommandBuilder;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Job\BlastJobFactory;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\SearchParameters;
+use App\Service\Blast\Search\SearchParametersNormalizer;
+use App\Service\SecurityCheck\SecurityCheckCookie;
+use App\Service\SecurityCheck\SecurityCheckGate;
+use App\Tests\Support\EntityFactory;
 use App\Tests\Support\FunctionalTestCase;
 use App\Twig\SecurityExtension;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -45,10 +53,23 @@ use Symfony\Component\DomCrawler\Crawler;
 #[UsesClass(BlastDatabaseRepository::class)]
 #[UsesClass(SecurityHeadersListener::class)]
 #[UsesClass(SecurityExtension::class)]
+#[UsesClass(NotFoundSubscriber::class)]
+#[UsesClass(SecurityCheckCookie::class)]
+#[UsesClass(SecurityCheckGate::class)]
+#[UsesClass(User::class)]
+#[UsesClass(UserRepository::class)]
+#[UsesClass(BlastDatabaseVoter::class)]
+#[UsesClass(BlastJobVoter::class)]
 final class HelpControllerTest extends FunctionalTestCase
 {
     public function testHelpPagesAreLinkedFromEveryPage(): void
     {
+        $user = EntityFactory::user();
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $this->client->loginUser($user);
+
         $crawler = $this->client->request('GET', '/');
         self::assertCount(1, $crawler->filter('nav a[href="/help"]'));
         self::assertCount(1, $crawler->filter('summary a[href="/help/parameters"]'));

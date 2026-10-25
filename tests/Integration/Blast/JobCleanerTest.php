@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\Job\JobCleaner;
-use App\Blast\JobWorkspace;
 use App\Entity\BlastDatabase;
 use App\Entity\BlastHit;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
 use App\Enum\JobStatus;
 use App\Repository\BlastJobRepository;
+use App\Service\Blast\Job\JobCleaner;
+use App\Service\Blast\JobWorkspace;
 use App\Tests\Support\DatabaseTestCase;
 use App\Tests\Support\EntityFactory;
 use App\Tests\Support\TemporaryDirectory;

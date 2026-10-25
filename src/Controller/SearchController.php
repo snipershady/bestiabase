@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Blast\Exception\DatabaseUnavailableException;
-use App\Blast\Exception\InvalidFastaException;
-use App\Blast\Exception\InvalidSearchParametersException;
-use App\Blast\Job\BlastJobSubmitter;
 use App\Entity\User;
 use App\Exception\IncompatibleProgramException;
 use App\Form\SearchFormClientConfig;
 use App\Form\SearchFormData;
 use App\Form\SearchFormType;
+use App\Service\Blast\Exception\DatabaseUnavailableException;
+use App\Service\Blast\Exception\InvalidFastaException;
+use App\Service\Blast\Exception\InvalidSearchParametersException;
+use App\Service\Blast\Job\BlastJobSubmitter;
+use App\Service\SecurityCheck\SecurityCheckGate;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Form\FormError;
@@ -32,9 +33,28 @@ final class SearchController extends AbstractController
     public function index(
         Request $request,
         BlastJobSubmitter $submitter,
+        SecurityCheckGate $securityCheck,
         #[Target('blast_search')]
         RateLimiterFactoryInterface $searchLimiter,
     ): Response {
+        $current = $this->getUser();
+
+        // Gli anonimi superano prima la verifica di sicurezza (proof of work); chi è collegato no.
+        if ($securityCheck->isRequired($request, $current)) {
+            return $this->redirectToRoute('app_security_check');
+        }
+
+        // Account registrato ma non ancora abilitato: nessuna ricerca, solo l'avviso.
+        if ($current instanceof User && !$current->isActive()) {
+            return $this->render('search/pending.html.twig', ['user' => $current], new Response(status: $request->isMethod('POST') ? Response::HTTP_FORBIDDEN : Response::HTTP_OK));
+        }
+
+        // Le ricerche dal web sono riservate a chi ha il ruolo ROLE_USER o ROLE_ADMIN: gli anonimi
+        // vedono la presentazione del progetto e l'invito ad accedere o registrarsi.
+        if (!$this->isGranted('ROLE_USER') && !$this->isGranted('ROLE_ADMIN')) {
+            return $this->render('search/welcome.html.twig', [], new Response(status: $request->isMethod('POST') ? Response::HTTP_FORBIDDEN : Response::HTTP_OK));
+        }
+
         // Il form popola direttamente $data (data_class): non serve rileggerlo con getData().
         $data = new SearchFormData();
         $form = $this->createForm(SearchFormType::class, $data);
@@ -53,8 +73,7 @@ final class SearchController extends AbstractController
             }
 
             try {
-                $user = $this->getUser();
-                $job = $submitter->submit($data->toSearchRequest(SearchFormType::isAdvanced($form), $user instanceof User ? $user : null));
+                $job = $submitter->submit($data->toSearchRequest(SearchFormType::isAdvanced($form), $current instanceof User ? $current : null));
 
                 return $this->redirectToRoute('app_job_show', ['id' => $job->getId()->toRfc4122()]);
             } catch (InvalidFastaException $exception) {

@@ -196,6 +196,11 @@ class BlastDatabase
      */
     public function isAccessibleBy(?User $user): bool
     {
+        // Un account disabilitato non può usare nessun database, nemmeno i pubblici.
+        if ($user?->isActive() === false) {
+            return false;
+        }
+
         if ($this->public || $user?->isAdmin() === true) {
             return true;
         }

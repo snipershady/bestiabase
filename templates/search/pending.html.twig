@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Account awaiting approval{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            {% if not user.emailVerified %}
+                <div class="alert alert-warning" role="status">
+                    <h2 class="h5 alert-heading">Confirm your email address</h2>
+                    <p>We sent a confirmation link to <strong>{{ user.email }}</strong>. An administrator can enable your account only after you follow it.</p>
+                    <form method="post" action="{{ path('app_resend_verification') }}" class="mb-0">
+                        <input type="hidden" name="_token" value="{{ csrf_token('resend-verification') }}">
+                        <button class="btn btn-sm btn-outline-dark" type="submit">Send the link again</button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="alert alert-info" role="status">
+                <h1 class="h4 alert-heading">Your account is not enabled yet</h1>
+                <p class="mb-0">Please wait for an administrator to enable your account. You will receive an email as soon as it is ready.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

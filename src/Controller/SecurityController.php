@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Altcha\AltchaChallengeFactory;
+use App\Service\Altcha\AltchaPurpose;
 use LogicException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +16,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 final class SecurityController extends AbstractController
 {
     #[Route('/login', name: 'app_login', methods: ['GET', 'POST'])]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, AltchaChallengeFactory $altcha): Response
     {
         if ($this->getUser() instanceof UserInterface) {
             return $this->redirectToRoute('app_search');
@@ -23,6 +25,7 @@ final class SecurityController extends AbstractController
         return $this->render('security/login.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
+            'altcha_challenge' => $altcha->createJson(AltchaPurpose::Login),
         ]);
     }
 

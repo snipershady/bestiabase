@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Result;
 
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\CutoffType;
-use App\Blast\Result\HitFilter;
-use App\Blast\Result\HitRow;
-use App\Blast\Result\HitSort;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\CutoffType;
+use App\Service\Blast\Result\HitFilter;
+use App\Service\Blast\Result\HitRow;
+use App\Service\Blast\Result\HitSort;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

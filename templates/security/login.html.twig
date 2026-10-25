@@ -2,16 +2,21 @@
 
 {% block title %}Sign in{% endblock %}
 
+{% block altcha_script %}{{ include('_partials/altcha_script.html.twig') }}{% endblock %}
+
 {% block body %}
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-lg-4" data-controller="altcha">
             <h1 class="h3 mb-3">Sign in</h1>
 
             {% if error %}
                 <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
             {% endif %}
 
-            <form method="post" action="{{ path('app_login') }}">
+            {# Il widget sta fuori dal form: altrimenti ne aggiungerebbe un campo suo. #}
+            <div class="mb-3">{{ include('_partials/altcha.html.twig', {challenge: altcha_challenge}) }}</div>
+
+            <form method="post" action="{{ path('app_login') }}" data-altcha-target="form" data-turbo="false">
                 <div class="mb-3">
                     <label class="form-label" for="login-email">Email</label>
                     <input class="form-control" type="email" id="login-email" name="_username" value="{{ last_username }}" autocomplete="email" required autofocus>
@@ -21,8 +26,12 @@
                     <input class="form-control" type="password" id="login-password" name="_password" autocomplete="current-password" required>
                 </div>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                <button class="btn btn-primary w-100" type="submit">Sign in</button>
+                <input type="hidden" name="altcha" data-altcha-target="field">
+                <button class="btn btn-primary w-100" type="submit" data-altcha-target="submit" disabled>Sign in</button>
             </form>
+
+            <p class="mt-3 small mb-1"><a href="{{ path('app_forgot_password') }}">Forgot your password?</a></p>
+            <p class="small">No account yet? <a href="{{ path('app_register') }}">Register</a></p>
         </div>
     </div>
 {% endblock %}

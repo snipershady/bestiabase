@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\CutoffType;
-use App\Blast\Result\HitFilter;
-use App\Blast\Result\HitRow;
-use App\Blast\Result\HitSort;
 use App\Entity\BlastHit;
 use App\Entity\BlastJob;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\CutoffType;
+use App\Service\Blast\Result\HitFilter;
+use App\Service\Blast\Result\HitRow;
+use App\Service\Blast\Result\HitSort;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\Persistence\ManagerRegistry;

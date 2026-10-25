@@ -42,7 +42,7 @@ final class UserAdminType extends AbstractType
                 'second_options' => ['label' => 'Repeat the password', 'attr' => ['autocomplete' => 'new-password']],
             ])
             ->add('admin', CheckboxType::class, ['required' => false, 'label' => 'Administrator', 'help' => 'Administrators can search every database and manage databases, users and jobs.'])
-            ->add('active', CheckboxType::class, ['required' => false, 'help' => 'Inactive users cannot sign in.'])
+            ->add('active', CheckboxType::class, ['required' => false, 'label' => 'Enabled', 'help' => 'Disabled users (including new registrations) can sign in but cannot run searches. Enabling sends them an email.'])
             ->add('databases', EntityType::class, [
                 'class' => BlastDatabase::class,
                 'multiple' => true,

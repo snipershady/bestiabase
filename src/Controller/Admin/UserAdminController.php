@@ -9,12 +9,14 @@ use App\Form\Admin\UserAdminData;
 use App\Form\Admin\UserAdminType;
 use App\Repository\BlastDatabaseRepository;
 use App\Repository\UserRepository;
+use App\Service\Mail\AccountMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -30,6 +32,7 @@ final class UserAdminController extends AbstractController
         private readonly BlastDatabaseRepository $databases,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AccountMailer $mailer,
     ) {
     }
 
@@ -54,6 +57,8 @@ final class UserAdminController extends AbstractController
                 $form->addError(new FormError('A user with this email or username already exists.'));
             } elseif ($email !== '' && $username !== '') {
                 $user = new User($email, $username, 'not-set', $clock->now());
+                // Creato da un amministratore: l'indirizzo è fidato.
+                $user->verifyEmail($clock->now());
                 $this->save($user, $data);
                 $this->addFlash('success', \sprintf('User "%s" created.', $email));
 
@@ -71,12 +76,21 @@ final class UserAdminController extends AbstractController
         $form = $this->createForm(UserAdminType::class, $data);
         $form->handleRequest($request);
 
+        $wasActive = $user->isActive();
+
         if ($form->isSubmitted() && $form->isValid()) {
             // Un amministratore non può togliersi il ruolo o disattivarsi: resterebbe senza accesso.
             if ($user === $this->getUser() && (!$data->admin || !$data->active)) {
                 $form->addError(new FormError('You cannot remove your own administrator role or disable your own account.'));
+            } elseif ($data->active && !$user->isActive() && !$user->isEmailVerified()) {
+                $form->addError(new FormError('The user has not confirmed the email address yet, so the account cannot be enabled.'));
             } else {
                 $this->save($user, $data);
+
+                if (!$wasActive && $user->isActive()) {
+                    $this->mailer->sendAccountEnabled($user);
+                }
+
                 $this->addFlash('success', \sprintf('User "%s" updated.', $user->getEmail()));
 
                 return $this->redirectToRoute('app_admin_users');
@@ -84,6 +98,28 @@ final class UserAdminController extends AbstractController
         }
 
         return $this->userFormPage($form, $user);
+    }
+
+    /**
+     * Abilitazione rapida di un account registrato dal pubblico: avvisa l'utente per e-mail.
+     */
+    #[Route('/{id}/enable', name: 'app_admin_user_enable', requirements: ['id' => Requirement::DIGITS], methods: ['POST'])]
+    public function enable(#[MapEntity(id: 'id')] User $user, Request $request): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('enable-user-' . $user->getId(), $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        if (!$user->isActive() && !$user->isEmailVerified()) {
+            $this->addFlash('danger', \sprintf('"%s" has not confirmed the email address yet, so the account cannot be enabled.', $user->getEmail()));
+        } elseif (!$user->isActive()) {
+            $user->activate();
+            $this->entityManager->flush();
+            $this->mailer->sendAccountEnabled($user);
+            $this->addFlash('success', \sprintf('User "%s" enabled.', $user->getEmail()));
+        }
+
+        return $this->redirectToRoute('app_admin_users');
     }
 
     private function save(User $user, UserAdminData $data): void

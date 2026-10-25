@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Search;
 
-use App\Blast\Exception\InvalidSearchParametersException;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\NucleotideScoring;
-use App\Blast\Search\ScoringMatrix;
-use App\Blast\Search\SearchParameters;
 use App\Enum\BlastProgram;
+use App\Service\Blast\Exception\InvalidSearchParametersException;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\NucleotideScoring;
+use App\Service\Blast\Search\ScoringMatrix;
+use App\Service\Blast\Search\SearchParameters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;

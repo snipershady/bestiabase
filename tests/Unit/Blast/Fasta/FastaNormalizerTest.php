@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Fasta;
 
-use App\Blast\Exception\InvalidFastaException;
-use App\Blast\Fasta\FastaDocument;
-use App\Blast\Fasta\FastaNormalizer;
-use App\Blast\Fasta\FastaRecord;
 use App\Enum\MolType;
+use App\Service\Blast\Exception\InvalidFastaException;
+use App\Service\Blast\Fasta\FastaDocument;
+use App\Service\Blast\Fasta\FastaNormalizer;
+use App\Service\Blast\Fasta\FastaRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

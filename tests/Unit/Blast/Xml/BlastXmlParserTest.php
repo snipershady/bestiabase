@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Blast\Xml;
 
-use App\Blast\Exception\BlastOutputParseException;
-use App\Blast\Xml\BlastXmlParser;
-use App\Blast\Xml\ParsedHit;
-use App\Blast\Xml\ParsedHsp;
-use App\Blast\Xml\ParsedIteration;
+use App\Service\Blast\Exception\BlastOutputParseException;
+use App\Service\Blast\Xml\BlastXmlParser;
+use App\Service\Blast\Xml\ParsedHit;
+use App\Service\Blast\Xml\ParsedHsp;
+use App\Service\Blast\Xml\ParsedIteration;
 use App\Tests\Support\TemporaryDirectory;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;

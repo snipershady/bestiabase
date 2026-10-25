@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Check your email{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h1 class="h3 mb-3">Check your email</h1>
+            <p>If an account exists for the address you entered, we have sent a link to reset the password. The link is valid for {{ lifetimeMinutes }} minutes and works only once.</p>
+            <p class="text-body-secondary">Nothing arrived? Check your spam folder or <a href="{{ path('app_forgot_password') }}">try again</a>.</p>
+        </div>
+    </div>
+{% endblock %}

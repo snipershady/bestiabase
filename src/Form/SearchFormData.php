@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Blast\Job\BlastSearchRequest;
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\GeneticCode;
-use App\Blast\Search\NucleotideScoring;
-use App\Blast\Search\ScoringMatrix;
-use App\Blast\Search\SearchParameters;
 use App\Entity\BlastDatabase;
 use App\Entity\User;
 use App\Enum\BlastProgram;
+use App\Service\Blast\Job\BlastSearchRequest;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\GeneticCode;
+use App\Service\Blast\Search\NucleotideScoring;
+use App\Service\Blast\Search\ScoringMatrix;
+use App\Service\Blast\Search\SearchParameters;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Validator\Constraints as Assert;

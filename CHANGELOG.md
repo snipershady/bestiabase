@@ -9,6 +9,10 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Added
 
+- Licenza GPL-2.0-only: file `LICENSE`, campo `license` di `composer.json` e sezione nei README.
+- `SETUP.md` e `SETUP-IT.md`: requisiti e guida breve all'installazione su Debian 13 (nginx o Apache2, PHP 8.5-FPM,
+  deploy in `/home/bestiabase/public_html`, servizi come `www-data`).
+- Linee guida per i contributi open source nei README, ridotti a descrizione, origine del progetto e link al setup.
 - Skeleton Symfony 8.1 su PHP >= 8.4 con Doctrine ORM, Migrations, Messenger, Security,
   Form, Validator, Twig, Turbo/Stimulus e AssetMapper.
 - Libreria `snipershady/typeidentifier`, con alias dell'interfaccia
@@ -84,7 +88,40 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
   `blast_download`; `SequenceExtractor`, `DownloadRequest`, controller Stimulus `select-all`.
 - Test end-to-end con i binari reali (gruppo `blast`, saltati se `BLAST_BIN_DIR` non è valido).
 
+- Account: registrazione pubblica (`/register`), recupero password via e-mail (`/reset-password`, link
+  monouso di un'ora, `symfonycasts/reset-password-bundle`), cambio password (`/account/password`) e
+  abilitazione rapida degli utenti dall'amministrazione. Tabella `reset_password_request`.
+- E-mail transazionali (`App\Service\Mail\AccountMailer`, via Messenger): link di reset e conferma di abilitazione
+  dell'account. Variabili `MAILER_DSN` e `MAILER_FROM_ADDRESS`.
+- Enum `App\Enum\UserRole` (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_DISABLED`) al posto delle costanti di `User`.
+- Rate limit su registrazioni e richieste di reset password (5 per indirizzo IP).
+- Home page: gli anonimi vedono una descrizione del progetto sopra il form; gli utenti `ROLE_DISABLED` un
+  avviso che chiede di attendere l'abilitazione.
+- `README.md` in inglese; la versione italiana è in `README-IT.md`.
+- Verifica dell'e-mail alla registrazione: link firmato di 24 ore (`UriSigner`), colonna `user.email_verified_at`
+  (gli utenti esistenti risultano verificati), rinvio dalla pagina di attesa. Un amministratore non può
+  abilitare un account con l'indirizzo non confermato; la conferma da sola non abilita nulla.
+- Avviso agli amministratori abilitati per ogni nuova registrazione.
+- `snipershady/emailvalidator`: all'iscrizione l'indirizzo deve essere ben formato e il suo dominio deve avere
+  record MX (vincolo `DeliverableEmail`; il resolver DNS è iniettabile).
+- ALTCHA (proof of work PBKDF2, `altcha-org/altcha`) su login e registrazione, con soluzione monouso legata allo
+  scopo e alla difficoltà configurata; widget in `public/js/altcha.min.js`, controller Stimulus `altcha`.
+  Variabili `ALTCHA_KEY` e `ALTCHA_{LOGIN,REGISTRATION,SECURITY_CHECK,TRAP}_DIFFICULTY`.
+- "Verifica di sicurezza" (`/security-check`) prima della home per i visitatori anonimi, stile Under Attack di
+  Cloudflare: cookie firmato, legato all'IP, di durata configurabile (`SECURITY_CHECK_COOKIE_LIFETIME`, default 1 ora). Nessuna proof of work per chi è collegato.
+- Rotta `/nopainnogain`: ogni 404 vi reindirizza in silenzio (senza finire nei log) e la pagina impone una proof of
+  work molto costosa, per far sprecare CPU ai bot.
+
 ### Fixed
+
+- Firefox bloccava ancora, dopo una visita Turbo, lo script inline vuoto della web debug toolbar (sviluppo): Turbo
+  copiando gli attributi sovrascriveva il nonce. Ora Turbo non riesegue gli script inline vuoti (`app.js`).
+
+- In sviluppo la web debug toolbar aggiungeva alla CSP nonce suoi e, dopo una navigazione Turbo, uno script inline
+  veniva bloccato (`script-src-elem`). Con `kernel.debug` il profiler ora riusa il nonce della pagina.
+
+- La verifica di sicurezza ripartiva all'infinito con difficoltà `high`: la libreria ALTCHA ignorava la lunghezza
+  del prefisso richiesta (restava `00`) e il server scartava ogni soluzione. Ora il prefisso è generato casuale.
 
 - Download "mapping": coordinate corrette anche per frame e filamento minus (in sequence.php la fine
   restava indefinita per i programmi tradotti).
@@ -123,8 +160,25 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Changed
 
-- La coda dei job (`MESSENGER_TRANSPORT_DSN`) e i lock (`LOCK_DSN`) usano Redis invece di
-  Doctrine e `flock`; aggiunto `symfony/redis-messenger`. I test restano su `in-memory://` e `flock`.
+- `README.md` e `README-IT.md` ridotti a descrizione, origine del progetto, link al setup e linee guida;
+  le istruzioni di installazione sono in `SETUP.md` / `SETUP-IT.md`.
+- Riorganizzazione: `Account`, `Altcha`, `Blast`, `Mail`, `Message`, `MessageHandler` e `SecurityCheck` sono ora
+  sotto `src/Service/` (namespace `App\Service\…`). I messaggi già in coda con i vecchi nomi di classe non
+  sono più leggibili: svuotare la coda prima del deploy (`bin/console messenger:consume async --limit=…`).
+- Navbar: un menu utente (`<details>` più controller Stimulus `usermenu`, senza JavaScript di Bootstrap) con
+  *Change password* e *Sign out* al posto dei due link separati.
+- Le ricerche dal web richiedono `ROLE_USER` o `ROLE_ADMIN`: gli anonimi vedono la presentazione del progetto con
+  l'invito ad accedere o registrarsi (un POST riceve 403), gli account disabilitati l'avviso di attesa.
+
+- Direttiva CSP `worker-src 'self' blob:` (il widget ALTCHA risolve la proof of work in worker creati da blob:).
+- Tutti i 404, anche quelli sollevati dai controller (job, hit o download inesistenti), reindirizzano a
+  `/nopainnogain` invece di mostrare la pagina d'errore.
+
+- Un nuovo utente nasce con il solo `ROLE_DISABLED`; il flag `user.active` è sostituito da quel ruolo (la
+  migrazione converte gli utenti già disattivati). Un account disabilitato può accedere ma non ha nessun
+  privilegio: niente ricerche, database, risultati o pagine amministrative. `UserChecker` rimosso.
+- Coda dei job (`MESSENGER_TRANSPORT_DSN`) e lock (`LOCK_DSN`) su Redis; aggiunto `symfony/redis-messenger`.
+  I test restano su `in-memory://` e `flock`.
 - Connessione Doctrine su MySQL 9.7 con charset `utf8mb4` e collation `utf8mb4_0900_ai_ci`.
 - File di bootstrap dello skeleton (`public/index.php`, `tests/bootstrap.php`,
   `config/preload.php`) resi conformi a PHPStan max; l'input del runtime viene tipizzato

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
@@ -19,24 +20,26 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\UniqueConstraint(name: 'uq_user_username', columns: ['username'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const string ROLE_USER = 'ROLE_USER';
-
-    public const string ROLE_ADMIN = 'ROLE_ADMIN';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
     private ?int $id = null;
 
-    /** @var list<string> ruoli assegnati esplicitamente, senza ROLE_USER implicito */
+    /**
+     * Ruoli assegnati esplicitamente, senza ROLE_USER implicito. Un utente nasce disabilitato:
+     * lo abilita un amministratore.
+     *
+     * @var list<string>
+     */
     #[ORM\Column(type: Types::JSON)]
-    private array $roles = [];
-
-    #[ORM\Column(type: Types::BOOLEAN)]
-    private bool $active = true;
+    private array $roles = [UserRole::Disabled->value];
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $lastLoginAt = null;
+
+    /** Quando l'utente ha confermato di possedere l'indirizzo; null finché non segue il link ricevuto. */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?DateTimeImmutable $emailVerifiedAt = null;
 
     /**
      * @param string $password hash prodotto dal password hasher di Symfony
@@ -87,27 +90,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Override]
     public function getRoles(): array
     {
-        return array_values(array_unique([...$this->roles, self::ROLE_USER]));
+        // Un account disabilitato non conserva nessun privilegio, nemmeno quelli assegnati in precedenza.
+        if (!$this->isActive()) {
+            return [UserRole::Disabled->value];
+        }
+
+        return array_values(array_unique([...$this->roles, UserRole::User->value]));
     }
 
-    public function grantRole(string $role): void
+    public function grantRole(UserRole $role): void
     {
-        if (!\in_array($role, $this->roles, true)) {
-            $this->roles[] = $role;
+        if (!$this->hasRole($role)) {
+            $this->roles[] = $role->value;
         }
     }
 
-    public function revokeRole(string $role): void
+    public function revokeRole(UserRole $role): void
     {
         $this->roles = array_values(array_filter(
             $this->roles,
-            static fn (string $granted): bool => $granted !== $role,
+            static fn (string $granted): bool => $granted !== $role->value,
         ));
+    }
+
+    /**
+     * Ruolo assegnato esplicitamente, indipendentemente dallo stato dell'account.
+     */
+    public function hasRole(UserRole $role): bool
+    {
+        return \in_array($role->value, $this->roles, true);
     }
 
     public function isAdmin(): bool
     {
-        return \in_array(self::ROLE_ADMIN, $this->roles, true);
+        return $this->isActive() && $this->hasRole(UserRole::Admin);
     }
 
     #[Override]
@@ -123,17 +139,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isActive(): bool
     {
-        return $this->active;
+        return !$this->hasRole(UserRole::Disabled);
     }
 
     public function deactivate(): void
     {
-        $this->active = false;
+        $this->grantRole(UserRole::Disabled);
     }
 
     public function activate(): void
     {
-        $this->active = true;
+        $this->revokeRole(UserRole::Disabled);
     }
 
     public function getCreatedAt(): DateTimeImmutable
@@ -149,5 +165,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function recordLogin(DateTimeImmutable $at): void
     {
         $this->lastLoginAt = $at;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->emailVerifiedAt instanceof DateTimeImmutable;
+    }
+
+    public function getEmailVerifiedAt(): ?DateTimeImmutable
+    {
+        return $this->emailVerifiedAt;
+    }
+
+    public function verifyEmail(DateTimeImmutable $at): void
+    {
+        $this->emailVerifiedAt ??= $at;
     }
 }

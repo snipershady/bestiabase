@@ -9,6 +9,7 @@ use App\Entity\BlastDatabaseProgram;
 use App\Entity\User;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
+use App\Enum\UserRole;
 use App\Form\Admin\DatabaseAdminData;
 use App\Form\Admin\UserAdminData;
 use App\Tests\Support\EntityFactory;
@@ -81,7 +82,7 @@ final class AdminDataTest extends TestCase
         $data->databases = new ArrayCollection([$second]);
         $data->applyTo($user, [$first, $second]);
 
-        self::assertTrue($user->isAdmin());
+        self::assertTrue($user->hasRole(UserRole::Admin));
         self::assertFalse($user->isActive());
         self::assertSame([], $first->getAuthorizedUsers());
         self::assertSame([$user], $second->getAuthorizedUsers());

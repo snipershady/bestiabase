@@ -27,6 +27,8 @@ async function waitFor(check, timeout = 10000) {
     throw new Error('Timed out waiting for a condition');
 }
 
+export const BROWSER_USER = { email: 'browser_user@example.org', password: 'browser test password' };
+
 export function fixtures(...args) {
     return execFileSync('php', ['tests/Browser/fixtures.php', ...args], { cwd: projectDir, encoding: 'utf8' });
 }

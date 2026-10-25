@@ -2,7 +2,7 @@
 // dei job, Turbo e Content-Security-Policy. Lanciare con: composer test:browser
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
-import { change, chromeBinary, fixtures, startApplication, startBrowser } from './support.mjs';
+import { BROWSER_USER, change, chromeBinary, fixtures, startApplication, startBrowser } from './support.mjs';
 
 describe('browser', { skip: chromeBinary === undefined ? 'Chrome/Chromium not installed' : false }, () => {
     let application;
@@ -13,6 +13,16 @@ describe('browser', { skip: chromeBinary === undefined ? 'Chrome/Chromium not in
         jobs = JSON.parse(fixtures('seed'));
         application = await startApplication();
         browser = await startBrowser();
+        // Le ricerche sono riservate agli utenti abilitati: si accede come l'utente delle fixture
+        // (la proof of work del login si risolve da sola).
+        await browser.open(`${application.baseUrl}/login`);
+        await browser.waitFor(`document.querySelector('[data-altcha-target="submit"]').disabled === false`, 30000);
+        await browser.evaluate(`(() => {
+            document.querySelector('#login-email').value = ${JSON.stringify(BROWSER_USER.email)};
+            document.querySelector('#login-password').value = ${JSON.stringify(BROWSER_USER.password)};
+            document.querySelector('[data-altcha-target="submit"]').click();
+        })()`);
+        await browser.waitFor(`document.querySelector('form[data-controller="search-form"]') !== null`, 30000);
     });
 
     after(async () => {
@@ -100,6 +110,35 @@ describe('browser', { skip: chromeBinary === undefined ? 'Chrome/Chromium not in
 
         await browser.waitFor(`document.querySelector('[data-job-status-target="status"]')?.textContent === 'finished'`, 10000);
         assert.equal(await browser.evaluate(`document.querySelector('h2#results-title')?.textContent`), 'Results');
+    });
+
+    it('opens the user menu, and closes it on an outside click or Escape', async () => {
+        await browser.open(`${application.baseUrl}/`);
+        const state = `(() => { const menu = document.querySelector('.bb-usermenu'); return [menu.open, getComputedStyle(menu.querySelector('.dropdown-menu')).display, Array.from(menu.querySelectorAll('.dropdown-item')).map((item) => item.textContent.trim())]; })()`;
+
+        assert.deepEqual(await browser.evaluate(state), [false, 'none', ['Change password', 'Sign out']]);
+
+        await browser.evaluate(`document.querySelector('.bb-usermenu summary').click()`);
+        assert.deepEqual(await browser.evaluate(state), [true, 'block', ['Change password', 'Sign out']]);
+
+        await browser.evaluate(`document.querySelector('main').click()`);
+        assert.equal(await browser.evaluate(`document.querySelector('.bb-usermenu').open`), false, 'outside click');
+
+        await browser.evaluate(`document.querySelector('.bb-usermenu summary').click()`);
+        await browser.evaluate(`window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
+        assert.equal(await browser.evaluate(`document.querySelector('.bb-usermenu').open`), false, 'Escape');
+    });
+
+    it('keeps Turbo from re-running empty inline scripts, which Firefox blocks under the CSP', async () => {
+        await browser.open(`${application.baseUrl}/`);
+
+        const marked = await browser.evaluate(`(() => {
+            const body = new DOMParser().parseFromString('<body><script> </script><script>window.x = 1</script><script src="/x.js"></script></body>', 'text/html').body;
+            document.dispatchEvent(new CustomEvent('turbo:before-render', { detail: { newBody: body } }));
+            return Array.from(body.querySelectorAll('script')).map((script) => script.getAttribute('data-turbo-eval'));
+        })()`);
+
+        assert.deepEqual(marked, ['false', null, null]);
     });
 
     it('runs every page without JavaScript errors or Content-Security-Policy violations', () => {

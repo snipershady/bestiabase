@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Blast\Database\BlastDatabaseImporter;
-use App\Blast\Database\DatabaseImportRequest;
 use App\Enum\BlastProgram;
 use App\Enum\MolType;
 use App\Exception\BestiaBaseException;
+use App\Service\Blast\Database\BlastDatabaseImporter;
+use App\Service\Blast\Database\DatabaseImportRequest;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;

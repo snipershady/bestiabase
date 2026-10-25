@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Blast\Search\GapCostPresets;
-use App\Blast\Search\GapCosts;
-use App\Blast\Search\NucleotideScoring;
-use App\Blast\Search\ScoringMatrix;
-use App\Blast\Search\SearchParameters;
 use App\Enum\BlastProgram;
+use App\Service\Blast\Search\GapCostPresets;
+use App\Service\Blast\Search\GapCosts;
+use App\Service\Blast\Search\NucleotideScoring;
+use App\Service\Blast\Search\ScoringMatrix;
+use App\Service\Blast\Search\SearchParameters;
 
 /**
  * Regole del form passate al controller Stimulus `search-form` (ex changeParameters e

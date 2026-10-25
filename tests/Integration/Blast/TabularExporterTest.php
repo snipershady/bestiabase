@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Blast;
 
-use App\Blast\Result\AlignmentCoordinates;
-use App\Blast\Result\BlastNumberFormat;
-use App\Blast\Result\TabularExporter;
 use App\Entity\BlastDatabase;
 use App\Entity\BlastHit;
 use App\Entity\BlastHsp;
 use App\Entity\BlastJob;
 use App\Entity\BlastQuery;
 use App\Enum\MolType;
+use App\Service\Blast\Result\AlignmentCoordinates;
+use App\Service\Blast\Result\BlastNumberFormat;
+use App\Service\Blast\Result\TabularExporter;
 use App\Tests\Support\DatabaseTestCase;
 use App\Tests\Support\EntityFactory;
 use PHPUnit\Framework\Attributes\CoversClass;

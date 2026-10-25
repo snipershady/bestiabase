@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
-use App\Blast\Process\ProcessResult;
-use App\Blast\Process\ProcessRunnerInterface;
+use App\Service\Blast\Process\ProcessResult;
+use App\Service\Blast\Process\ProcessRunnerInterface;
 use Closure;
 use Override;
 

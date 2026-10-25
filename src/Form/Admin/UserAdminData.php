@@ -7,6 +7,7 @@ namespace App\Form\Admin;
 use App\Command\CreateUserCommand;
 use App\Entity\BlastDatabase;
 use App\Entity\User;
+use App\Enum\UserRole;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -51,7 +52,7 @@ final class UserAdminData
         $data = new self();
         $data->email = $user->getEmail();
         $data->username = $user->getUsername();
-        $data->admin = $user->isAdmin();
+        $data->admin = $user->hasRole(UserRole::Admin);
         $data->active = $user->isActive();
         $data->databases = new ArrayCollection(array_values(array_filter(
             $restrictedDatabases,
@@ -69,9 +70,9 @@ final class UserAdminData
     public function applyTo(User $user, array $restrictedDatabases): void
     {
         if ($this->admin) {
-            $user->grantRole(User::ROLE_ADMIN);
+            $user->grantRole(UserRole::Admin);
         } else {
-            $user->revokeRole(User::ROLE_ADMIN);
+            $user->revokeRole(UserRole::Admin);
         }
 
         if ($this->active) {
