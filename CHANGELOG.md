@@ -9,6 +9,8 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Added
 
+- Significato dell'acronimo BESTIA (BLAST Environment for Search, Tracking, Inspection and Analysis)
+  e del nome BestiaBase nei README in inglese e italiano.
 - Handler Monolog `slack_error` (livello `error`, ambienti `dev` e `prod`) con le variabili `SLACK_TOKEN`,
   `SLACK_CHANNEL` e `SLACK_BOT_NAME`, documentate in `SETUP.md` / `SETUP-IT.md`.
 - Licenza GPL-2.0-only: file `LICENSE`, campo `license` di `composer.json` e sezione nei README.

@@ -2,6 +2,9 @@
 
 *Versione italiana: [README-IT.md](README-IT.md).*
 
+**BESTIA** stands for **B**LAST **E**nvironment for **S**earch, **T**racking, **I**nspection and
+**A**nalysis. “Base” refers to the sequence databases and the platform that makes them accessible.
+
 BestiaBase is a web server for similarity searches with **NCBI BLAST+** (blastn, blastp, blastx,
 tblastn, tblastx) on sequence databases. Searches run in the background, results are stored and can
 be browsed, downloaded and shared, and databases can be public or restricted to selected users.

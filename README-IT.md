@@ -2,6 +2,10 @@
 
 *English version: [README.md](README.md).*
 
+**BESTIA** è l'acronimo di **B**LAST **E**nvironment for **S**earch, **T**racking, **I**nspection and
+**A**nalysis: un ambiente BLAST per la ricerca, il monitoraggio, la consultazione e l'analisi dei
+risultati. «Base» richiama i database di sequenze e la piattaforma che li rende accessibili.
+
 BestiaBase è un web server per ricerche di similarità con **NCBI BLAST+** (blastn, blastp, blastx,
 tblastn, tblastx) su database di sequenze. Le ricerche girano in background, i risultati vengono
 salvati e si possono consultare, scaricare e condividere, e i database possono essere pubblici o

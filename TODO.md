@@ -206,6 +206,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 
 ## Fase 10 — Hardening & docs
 
+- [x] Acronimo BESTIA e significato del nome BestiaBase nei README in inglese e italiano
 - [x] Header di sicurezza (`SecurityHeadersListener`): CSP con nonce per richiesta su script e stili, senza
   `unsafe-inline` (`csp_nonce()` per importmap e `<meta name="csp-nonce">` per Turbo), `frame-ancestors 'none'`,
   `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; HSTS demandato al web server (README)
