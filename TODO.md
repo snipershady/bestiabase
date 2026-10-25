@@ -19,7 +19,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 - [x] PHPUnit strict (suite unit/integration/functional, random order, coverage metadata) + gate coverage 100%
 - [x] Script Composer `qa` / `fix`
 - [x] Layout Twig + Bootstrap 5.3 (importmap), home `/` con test funzionale
-- [x] Messenger transport: Doctrine per ora (Redis rimandato su indicazione del committente)
+- [x] Messenger transport: Doctrine, poi passato a Redis (`symfony/redis-messenger`)
 - [x] Database di test `bestiabase_test` (utente dedicato, credenziali in `.env.test.local`)
 
 ## Da discutere
@@ -105,7 +105,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 - [x] `app:blast:cleanup [--days] [--dry-run]` (`JobCleaner`, `BLAST_JOB_RETENTION_DAYS`, solo job terminati)
 - [x] `app:blast:search --async` (accoda invece di eseguire)
 - [x] Messenger `in-memory://` in ambiente di test
-- [ ] `LOCK_DSN` su Redis se i worker girano su più host (insieme alla decisione su `redis-messenger`)
+- [x] `LOCK_DSN` su Redis
 - [ ] Workspace dei job: oggi rimosso solo dalla retention; valutare la rimozione a fine job quando
   l'XML grezzo non serve più (dipende dal download dell'output in Fase 6)
 
@@ -223,7 +223,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 Raccolte dalle fasi precedenti (dettagli nelle rispettive sezioni):
 
 - [?] Pacchetti Composer non usati (notifier, web-link, http-client, intl, expression-language, altcha) — Fase 9
-- [?] Redis: `redis-messenger` e `LOCK_DSN` condiviso se i worker girano su più macchine — Fase 4
+- [x] Redis: `redis-messenger` e `LOCK_DSN` condiviso
 - [?] Registrazione libera degli utenti — Fase 8
 - [ ] `trusted_proxies` di Symfony dietro Cloudflare/proxy (altrimenti il rate limit vede un solo IP) — README
 - [ ] Recupero password via email; gruppi di utenti — Fase 8

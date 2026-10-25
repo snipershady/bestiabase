@@ -64,8 +64,8 @@ bin/console app:user:create admin@example.org admin --admin   # chiede la passwo
 | `BLAST_FASTA_MAX_BYTES` | `15728640` (15 MiB) | Dimensione massima di un FASTA da CLI (`--subject`). Non aumentarla: il FASTA normalizzato va in colonne `MEDIUMTEXT` |
 | `BLAST_JOB_RETENTION_DAYS` | `30` | Giorni dopo cui `app:blast:cleanup` elimina i job terminati |
 | `BLAST_SEARCH_RATE_LIMIT` / `BLAST_SEARCH_RATE_INTERVAL` | `20` / `10 minutes` | Ricerche dal web ammesse per indirizzo IP |
-| `MESSENGER_TRANSPORT_DSN` | `doctrine://default` | Coda dei job |
-| `LOCK_DSN` | `flock` | Lock per job; con worker su più macchine serve uno store condiviso (es. Redis) |
+| `MESSENGER_TRANSPORT_DSN` | `redis://127.0.0.1:6379/messages` | Coda dei job (Redis Streams; i messaggi falliti restano nella coda Doctrine `failed`) |
+| `LOCK_DSN` | `redis://127.0.0.1:6379` | Lock per job, su Redis (condiviso tra worker); `flock` solo per sviluppo con un unico worker |
 
 ## Parametri PHP consigliati
 

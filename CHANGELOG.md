@@ -123,6 +123,8 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Changed
 
+- La coda dei job (`MESSENGER_TRANSPORT_DSN`) e i lock (`LOCK_DSN`) usano Redis invece di
+  Doctrine e `flock`; aggiunto `symfony/redis-messenger`. I test restano su `in-memory://` e `flock`.
 - Connessione Doctrine su MySQL 9.7 con charset `utf8mb4` e collation `utf8mb4_0900_ai_ci`.
 - File di bootstrap dello skeleton (`public/index.php`, `tests/bootstrap.php`,
   `config/preload.php`) resi conformi a PHPStan max; l'input del runtime viene tipizzato
