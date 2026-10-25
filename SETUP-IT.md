@@ -39,7 +39,7 @@ adduser --disabled-password --gecos "" bestiabase
 chgrp www-data /home/bestiabase && chmod 750 /home/bestiabase
 
 sudo -u bestiabase -i
-git clone <url-repository> public_html
+git clone git@github.com:snipershady/bestiabase.git public_html
 cd public_html
 composer install --no-dev --optimize-autoloader
 exit
