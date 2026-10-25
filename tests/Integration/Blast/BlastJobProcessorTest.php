@@ -117,6 +117,37 @@ final class BlastJobProcessorTest extends DatabaseTestCase
         self::assertSame(3, $this->rowsIn('blast_hsp'));
     }
 
+    public function testFinishedJobKeepsOnlyTheCompressedXml(): void
+    {
+        $job = $this->pendingJob();
+
+        $this->processor(BlastTestKit::blastWritingOutput('blastn_legacy_volumes.xml'))->process($job->getId());
+
+        $workspace = $this->kit->workspace();
+        self::assertFileDoesNotExist($workspace->path($job->getId(), JobWorkspace::QUERY_FILE));
+        self::assertFileDoesNotExist($workspace->path($job->getId(), JobWorkspace::OUTPUT_FILE));
+        self::assertSame(
+            file_get_contents(self::FIXTURES . 'blastn_legacy_volumes.xml'),
+            file_get_contents('compress.zlib://' . $workspace->path($job->getId(), JobWorkspace::OUTPUT_ARCHIVE)),
+        );
+    }
+
+    public function testArchiveFailureDoesNotFailTheJob(): void
+    {
+        $job = $this->pendingJob();
+        $workspace = $this->kit->workspace();
+        $runner = new RecordingProcessRunner()->onRun(static function (array $command) use ($job, $workspace): void {
+            new Filesystem()->copy(self::FIXTURES . 'blastn_legacy_volumes.xml', BlastTestKit::outputPath($command));
+            new Filesystem()->mkdir($workspace->path($job->getId(), JobWorkspace::OUTPUT_ARCHIVE . '.tmp'));
+        });
+
+        $processed = $this->processor($runner)->process($job->getId());
+
+        self::assertSame(JobStatus::Finished, $processed->getStatus());
+        self::assertSame(3, $this->rowsIn('blast_hsp'));
+        self::assertFileExists($workspace->path($job->getId(), JobWorkspace::OUTPUT_FILE), 'the original XML stays when it cannot be compressed');
+    }
+
     public function testBlastFailureMarksTheJobFailedWithTheBlastMessage(): void
     {
         $job = $this->pendingJob();

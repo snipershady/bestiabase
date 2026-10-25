@@ -178,6 +178,7 @@ final class JobControllerTest extends FunctionalTestCase
         self::assertSame('/job/' . $job->getId()->toRfc4122() . '/hit/' . $hit->getId(), $crawler->filter('table tbody td.text-end a')->attr('href'));
         self::assertSelectorExists('a[href$="/hits.tsv"]');
         self::assertSelectorNotExists('a[href$="/output.xml"]', 'no XML file in the workspace');
+        self::assertSelectorTextContains('main', 'The original BLAST XML (outfmt 5) is no longer stored on the server.');
         self::assertSelectorNotExists('.pagination');
     }
 
@@ -342,21 +343,39 @@ final class JobControllerTest extends FunctionalTestCase
         [$job] = $this->finishedJob();
         $workspace = self::getContainer()->get(JobWorkspace::class);
         $workspace->write($job->getId(), JobWorkspace::OUTPUT_FILE, '<BlastOutput/>');
+        $workspace->archive($job->getId());
 
         try {
             $crawler = $this->client->request('GET', '/job/' . $job->getId()->toRfc4122());
             self::assertCount(1, $crawler->filter('a[href$="/output.xml"]'));
+            self::assertSelectorTextNotContains('main', 'no longer stored on the server');
 
             $this->client->request('GET', '/job/' . $job->getId()->toRfc4122() . '/output.xml');
             self::assertResponseIsSuccessful();
             self::assertResponseHeaderSame('Content-Type', 'application/xml');
             self::assertStringContainsString('attachment; filename=blast-', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
+            self::assertSame('<BlastOutput/>', $this->client->getInternalResponse()->getContent(), 'the compressed file is served as plain XML');
         } finally {
             $workspace->remove($job->getId());
         }
 
         $this->client->request('GET', '/job/' . $job->getId()->toRfc4122() . '/output.xml');
         self::assertResponseRedirects('/nopainnogain');
+    }
+
+    public function testXmlOfJobsFinishedBeforeArchivingIsStillServed(): void
+    {
+        [$job] = $this->finishedJob();
+        $workspace = self::getContainer()->get(JobWorkspace::class);
+        $workspace->write($job->getId(), JobWorkspace::OUTPUT_FILE, '<BlastOutput/>');
+
+        try {
+            $this->client->request('GET', '/job/' . $job->getId()->toRfc4122() . '/output.xml');
+            self::assertResponseIsSuccessful();
+            self::assertSame('<BlastOutput/>', $this->client->getInternalResponse()->getContent());
+        } finally {
+            $workspace->remove($job->getId());
+        }
     }
 
     public function testDownloadsOfAnUnfinishedJobAreNotFound(): void

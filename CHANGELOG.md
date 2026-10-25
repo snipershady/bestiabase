@@ -9,6 +9,8 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Added
 
+- Handler Monolog `slack_error` (livello `error`, ambienti `dev` e `prod`) con le variabili `SLACK_TOKEN`,
+  `SLACK_CHANNEL` e `SLACK_BOT_NAME`, documentate in `SETUP.md` / `SETUP-IT.md`.
 - Licenza GPL-2.0-only: file `LICENSE`, campo `license` di `composer.json` e sezione nei README.
 - `SETUP.md` e `SETUP-IT.md`: requisiti e guida breve all'installazione su Debian 13 (nginx o Apache2, PHP 8.5-FPM,
   deploy in `/home/bestiabase/public_html`, servizi come `www-data`).
@@ -160,6 +162,12 @@ e il progetto adotta il [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Changed
 
+- Workspace dei job (`var/blast/jobs/{uuid}`): a job concluso l'XML di BLAST+ resta compresso (`output.xml.gz`) e
+  `query.fa`/`subject*` vengono eliminati, perché query e soggetto sono già nel database del job. Il download
+  `/job/{id}/output.xml` decomprime in streaming; i job precedenti con `output.xml` in chiaro funzionano ancora.
+  Se l'archiviazione fallisce il job resta `finished`.
+- La pagina del job spiega che l'XML originale non è più sul server quando il file è stato ripulito, invece di
+  nascondere il pulsante.
 - `README.md` e `README-IT.md` ridotti a descrizione, origine del progetto, link al setup e linee guida;
   le istruzioni di installazione sono in `SETUP.md` / `SETUP-IT.md`.
 - Riorganizzazione: `Account`, `Altcha`, `Blast`, `Mail`, `Message`, `MessageHandler` e `SecurityCheck` sono ora

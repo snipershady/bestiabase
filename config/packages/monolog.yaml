@@ -5,6 +5,14 @@ monolog:
 when@dev:
     monolog:
         handlers:
+            slack_error:
+                type: slack
+                token: '%env(SLACK_TOKEN)%'
+                channel: '%env(SLACK_CHANNEL)%'
+                bot_name: '%env(SLACK_BOT_NAME)%'
+                icon_emoji: ':exclamation:'
+                level: error
+                include_extra: true
             main:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
@@ -32,6 +40,14 @@ when@test:
 when@prod:
     monolog:
         handlers:
+            slack_error:
+                type: slack
+                token: '%env(SLACK_TOKEN)%'
+                channel: '%env(SLACK_CHANNEL)%'
+                bot_name: '%env(SLACK_BOT_NAME)%'
+                icon_emoji: ':exclamation:'
+                level: error
+                include_extra: true
             main:
                 type: fingers_crossed
                 action_level: error

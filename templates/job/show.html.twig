@@ -47,6 +47,9 @@
                     <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_job_output_xml', {id: job.id}) }}">BLAST XML (outfmt 5)</a>
                 {% endif %}
             </p>
+            {% if not has_xml %}
+                <p class="small text-body-secondary">The original BLAST XML (outfmt 5) is no longer stored on the server. The results below and the tabular downloads are still available.</p>
+            {% endif %}
 
             <form method="get" class="row g-2 align-items-end mb-3" aria-label="Filter results">
                 <div class="col-auto">

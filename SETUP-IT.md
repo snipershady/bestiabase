@@ -58,7 +58,22 @@ DEFAULT_URI=https://blast.example.org
 BLAST_BIN_DIR=/opt/ncbi-blast-2.17.0+/bin
 MAILER_DSN=smtp://utente:password@smtp.example.org:587
 MAILER_FROM_ADDRESS=no-reply@example.org
+SLACK_TOKEN=xoxb-token-del-tuo-bot
+SLACK_CHANNEL=bestiabase-error-log
+SLACK_BOT_NAME=bestiabase
 ```
+
+Le tre variabili `SLACK_*` configurano l'handler Monolog `slack_error` (`config/packages/monolog.yaml`),
+che invia a Slack ogni messaggio di log di livello `error` o superiore, in `dev` e `prod`:
+
+| Variabile | Significato |
+|---|---|
+| `SLACK_TOKEN` | Token del bot (`xoxb-…`) di un'app Slack con lo scope `chat:write`. Va in `.env.local` o nel vault dei segreti (`bin/console secrets:set SLACK_TOKEN`), mai in `.env`. |
+| `SLACK_CHANNEL` | Canale che riceve i messaggi, senza `#`. Il bot deve essere invitato nel canale (`/invite @bot`) oppure poter scrivere nei canali pubblici. |
+| `SLACK_BOT_NAME` | Nome mostrato come mittente dei messaggi. |
+
+`.env` contiene il segnaposto `SLACK_TOKEN=!ChangeMe!`: finché non imposti un token reale Slack rifiuta i
+messaggi e non arriva nulla. L'handler non è attivo nell'ambiente `test`.
 
 Permessi: `www-data` legge il codice e scrive in `var/` e `blastdb/`.
 

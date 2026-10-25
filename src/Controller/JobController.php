@@ -24,7 +24,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,7 +70,7 @@ final class JobController extends AbstractController
             'filter' => $filter,
             'rows' => $finished ? $hits->findRows($job, $filter, $firstQuery, $lastQuery) : [],
             'pages' => max(1, (int) ceil(($job->getNumQueries() ?? 0) / HitFilter::QUERIES_PER_PAGE)),
-            'has_xml' => $finished && is_file($workspace->path($job->getId(), JobWorkspace::OUTPUT_FILE)),
+            'has_xml' => $finished && $workspace->output($job->getId()) !== null,
         ]);
     }
 
@@ -133,20 +132,23 @@ final class JobController extends AbstractController
     }
 
     /**
-     * Output XML originale di BLAST (`-outfmt 5`), finché il workspace del job esiste.
+     * Output XML originale di BLAST (`-outfmt 5`), finché il workspace del job esiste. Sul disco è
+     * compresso: si decomprime in streaming, così il client riceve un XML normale.
      */
     #[IsGranted(BlastJobVoter::VIEW, 'job')]
     #[Route('/output.xml', name: 'app_job_output_xml', methods: ['GET'])]
-    public function outputXml(#[MapEntity(id: 'id')] BlastJob $job, JobWorkspace $workspace): BinaryFileResponse
+    public function outputXml(#[MapEntity(id: 'id')] BlastJob $job, JobWorkspace $workspace): StreamedResponse
     {
-        $path = $workspace->path($job->getId(), JobWorkspace::OUTPUT_FILE);
+        $path = $workspace->output($job->getId());
 
-        if ($job->getStatus() !== JobStatus::Finished || !is_file($path)) {
+        if ($job->getStatus() !== JobStatus::Finished || $path === null) {
             throw $this->createNotFoundException('The BLAST output of this job is no longer available.');
         }
 
-        $response = new BinaryFileResponse($path, headers: ['Content-Type' => 'application/xml']);
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'blast-' . $job->getId()->toRfc4122() . '.xml');
+        $response = new StreamedResponse(static function () use ($path): void {
+            readfile('compress.zlib://' . $path);
+        }, headers: ['Content-Type' => 'application/xml']);
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'blast-' . $job->getId()->toRfc4122() . '.xml'));
 
         return $response;
     }

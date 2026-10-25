@@ -71,6 +71,7 @@ final readonly class BlastTestKit
             new BlastVersionReader($locator, new BlastProcessExecutor(new RecordingProcessRunner(new ProcessResult(0, "blastn: 2.17.0+\n Package: blast 2.17.0\n", '')), 60.0)),
             new BlastXmlParser(),
             new BlastResultImporter($entityManager),
+            $this->workspace(),
             $entityManager,
             $clock,
             new NullLogger(),

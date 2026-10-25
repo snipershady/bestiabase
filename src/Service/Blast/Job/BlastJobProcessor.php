@@ -16,6 +16,7 @@ use App\Service\Blast\BlastRunner;
 use App\Service\Blast\BlastVersionReader;
 use App\Service\Blast\Exception\DatabaseUnavailableException;
 use App\Service\Blast\Exception\JobNotFoundException;
+use App\Service\Blast\JobWorkspace;
 use App\Service\Blast\Xml\BlastXmlParser;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -43,6 +44,7 @@ final readonly class BlastJobProcessor
         private BlastVersionReader $versionReader,
         private BlastXmlParser $parser,
         private BlastResultImporter $importer,
+        private JobWorkspace $workspace,
         private EntityManagerInterface $entityManager,
         private ClockInterface $clock,
         private LoggerInterface $logger,
@@ -72,10 +74,25 @@ final readonly class BlastJobProcessor
             $summary = $this->importer->import($job, $this->parser->parse($output));
             $job->finish($this->clock->now(), $summary->queries, $summary->hits);
             $this->entityManager->flush();
-
-            return $job;
         } catch (Throwable $throwable) {
             return $this->fail($jobId, $throwable);
+        }
+
+        $this->archiveWorkspace($job);
+
+        return $job;
+    }
+
+    /**
+     * I risultati sono già nel database: se l'archiviazione dei file fallisce il job resta "finished"
+     * e la pulizia periodica elimina comunque la directory.
+     */
+    private function archiveWorkspace(BlastJob $job): void
+    {
+        try {
+            $this->workspace->archive($job->getId());
+        } catch (Throwable $throwable) {
+            $this->logger->warning('BLAST job {job} finished but its files could not be archived: {error}', ['job' => $job->getId()->toRfc4122(), 'error' => $throwable->getMessage()]);
         }
     }
 

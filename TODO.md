@@ -223,6 +223,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto · `[?]` decisione richi
 Raccolte dalle fasi precedenti (dettagli nelle rispettive sezioni):
 
 - [?] Pacchetti Composer non usati (notifier, web-link, http-client, intl, expression-language) — Fase 9
+- [x] Workspace dei job: XML compresso (`output.xml.gz`), input FASTA eliminati a job concluso, messaggio se l'XML non c'è più
 - [x] Redis: `redis-messenger` e `LOCK_DSN` condiviso
 - [x] Registrazione libera degli utenti: account `ROLE_DISABLED` finché un amministratore non lo abilita
 - [ ] `trusted_proxies` di Symfony dietro Cloudflare/proxy (altrimenti il rate limit vede un solo IP) — README
